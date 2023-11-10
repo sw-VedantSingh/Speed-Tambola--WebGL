@@ -31,7 +31,7 @@ public class SpeedTambolaGameManager : MonoBehaviour
     [SerializeField] float TimerDuration = 15f;
     public float TimerValue;
     [SerializeField] float TotalTimerValue;
-    [SerializeField] float TotalTimeRemaining = 120f;
+    public float TotalTimeRemaining = 120f;
     float FillValue;
     public List<int> shuffleCall = new();
     [HideInInspector] public List<string> Called;
@@ -61,22 +61,62 @@ public class SpeedTambolaGameManager : MonoBehaviour
     public List<List<NumberData>> FinishedCombinationsInOrder = new();
     public GameObject ResultPanel;
     private float MessageTime = 2f;
-    DateTime startTime;
-    DateTime endTime;
+    public DateTime startTime;
+    public DateTime endTime;
     [SerializeField] TMP_Text Balance;
+    public string currentAmountType = "EUR";
+
+    [Header("NEW UPDATED")]
+    public double playerAmount;
+    public TMP_Text showBetAmount;
+    public double WinningBetAmt;
+    public GameObject Demo_txt;
+    public string PlayerID;
+    public string playerName;
+
+    public TMP_Text Currency_Txt;
+    public TMP_Text playerAmountTxt;
+    public double betAmountIs;
+    public TMP_Text WinnerBetAmt_Txt;
+    public TMP_Text LoserBetAmt_Txt;
+    public int betIndex;
+    public bool IsGameFinished;
+    // public List<BotDetailsTambola> botdata;
+
+    // public List<botdata> Balances;
+    public bool IsGamestart;
     void Awake()
     {
         Instance = this;
-        pool.TokenPool();
-    }
 
+
+        pool.TokenPool();
+
+    }
+    public DateTime val;
     void Start()
     {
+        val = DateTime.Now;
+        endTime = val.AddSeconds(500000000);
         Debug.Log("$$$ ##########################");
-        APIController.instance.OnUserDetailsUpdate += SubscribeToEvent;
-        if (SpeedTambolaGameController.Controller.CentralTimer)
+        //APIController.instance.OnUserDetailsUpdate += SubscribeToEvent;
+        APIController.instance.OnUserDetailsUpdate += InitPlayerDetails;
+        APIController.instance.OnUserBalanceUpdate += InitAmountDetails;
+        APIController.instance.OnUserDeposit += OnDepositeActionCall;
+        InitialSpawningNum();
+
+
+
+
+
+
+        Invoke(nameof(InitialBetInGame), 2f);
+    }
+    public void InitialSpawningNum()
+    {
+        if (SpeedTambolaGameController.Controller.CentralTimer )
         {
-            
+
             SpawnDigits(1, 15, 5, B_Grid, store.b_list, 1);
             SpawnDigits(16, 30, 5, I_Grid, store.i_list, 2);
             SpawnDigits(31, 45, 4, N_Grid, store.n_list, 3);
@@ -84,23 +124,127 @@ public class SpeedTambolaGameManager : MonoBehaviour
             SpawnDigits(61, 75, 5, O_Grid, store.o_list, 5);
             SpawnShuffled();
             timedelay(count);
-            startTime = DateTime.Now;
-            endTime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute + Mathf.FloorToInt(TotalTimeRemaining / 60), startTime.Second + (int)(TotalTimeRemaining % 60));
+            /*new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute + Mathf.FloorToInt(TotalTimeRemaining / 60), startTime.Second + (int)(TotalTimeRemaining % 60));*/
             Debug.Log($"End Time: {endTime}");
             Debug.Log($"Start Time: {startTime}");
         }
+
+
+    }
+
+    private void InitialBetInGame()
+    {
+
+        TransactionMetaData _metaData = new TransactionMetaData();
+        _metaData.Info = "Initial Bet";
+        _metaData.Amount = APIController.instance.userDetails.bootAmount;
+
+        betIndex = APIController.instance.InitlizeBet(APIController.instance.userDetails.bootAmount, _metaData, false, (success) =>
+        {
+            if (success)
+            {
+                Debug.Log("initialbet Success....");
+            }
+            else
+            {
+                Debug.Log("initialbet failed....");
+
+            }
+        });
+    }
+    public void OnDepositeActionCall()
+    {
+        SpeedTambolaGameManager.Instance.ResultPanel.SetActive(false);
+
+        MatchMakingTambola.Instance.Showmatching();
+        SpeedTambolaGameManager.Instance.RestartGame();
+    }
+    public void WinningAmtCalculation()
+    {
+        WinningBetAmt = (APIController.instance.userDetails.bootAmount * 2);
+        // if (playerwin)
+        // {
+        WinnerBetAmt_Txt.text = WinningBetAmt.ToString("");
+        LoserBetAmt_Txt.text = "0";
+        // }
+
+
+
+
+
+
+
+
+
+
+    }
+
+    public void InitPlayerDetails()
+    {
+
+
+        PlayerID = APIController.instance.userDetails.Id;
+
+        playerName = APIController.instance.userDetails.name;
+
+        Debug.Log(" User_Name : " + APIController.instance.userDetails.name + "......" + "UserId : " + APIController.instance.userDetails.name);
+
+        SpeedTambolaGameController.Controller.SettingsPanel.playerName.text = playerName;
+        if (APIController.instance.userDetails.isBlockApiConnection)
+        {
+            Demo_txt.SetActive(true);
+        }
+        else
+        {
+            Demo_txt.SetActive(false);
+        }
+        MatchMakingTambola.Instance.Showmatching();
+    }
+    public void InitAmountDetails()
+    {
+        // betAmountIs = APIController.instance.userDetails.bootAmount;
+        Currency_Txt.text = APIController.instance.userDetails.currency_type;
+
+        Debug.Log($"CURRENT_AMOUNT ----- {currentAmountType}");
+
+        playerAmount = APIController.instance.userDetails.balance;
+        playerAmountTxt.text = $"{playerAmount:F2} ";
+        showBetAmount.text = $"{betAmountIs * 0.01:F2} {currentAmountType}";
+        //string message = "Initialize Bet";
+        //TransactionMetaData val = new();
+        //val.Amount = betAmountIs;
+        //val.Info = message;
+        //betIndex = APIController.instance.InitlizeBet((betAmountIs * 0.01f), val, false, (Success) =>
+        //{
+
+        //    if (Success)
+        //    {
+
+        //    }
+        //    else
+        //    {
+        //        // MiniRouletteUIController.instance.ExitWebGL();
+        //        Debug.Log(".......");
+
+        //    }
+
+        //});
     }
 
     public void SubscribeToEvent()
     {
-        Balance.text = $"{APIController.instance.userDetails.balance} {APIController.instance.userDetails.currency_type}";
+        Balance.text = $"{APIController.instance.userDetails.balance:F2} ";
+        // showBetAmount= APIController.instance.userDetails.bootAmount;
+
+        //  Currency_Txt.text = APIController.instance.userDetails.currency_type;
+
     }
 
     void OnEnable()
     {
         //ShowMe();
-        Invoke(nameof(RestartGame), 1 / 60);
-        
+        // Invoke(nameof(RestartGame), 1 / 60);
+
     }
     private void OnDisable()
     {
@@ -130,7 +274,12 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        ResultPanel.SetActive(false);
+        if (APIController.instance.userDetails.balance <= 0)
+        {
+            SpeedTambolaGameController.Controller.ShowInsufficientPopUp();
+        }
+        // ResultPanel.SetActive(false);
+        IsGameFinished = false;
         RemainingTime.color = Color.white;
         MessageTime = 2f;
         BingoCount = 0;
@@ -138,9 +287,10 @@ public class SpeedTambolaGameManager : MonoBehaviour
         SpeedTambolaScoreManager.ScoreInstance.AbilityAndScoreUpdates.transform.GetChild(1).GetComponent<Image>().fillAmount = 1.0f;
         SpeedTambolaScoreManager.ScoreInstance.abilityDuration = SpeedTambolaScoreManager.ScoreInstance.buffer;
         SpeedTambolaScoreManager.ScoreInstance.objectIndex = 0;
-        //SpeedTambolaGameController.Controller.CentralTimer = true;
-        startTime = DateTime.Now;
-        endTime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute + Mathf.FloorToInt(TotalTimeRemaining / 60), startTime.Second + (int)(TotalTimeRemaining % 60));
+        SpeedTambolaGameController.Controller.CentralTimer = true;
+        SpeedTambolaGameController.Controller.Gameplay = true;
+        IsGameStart = false;
+
         SpeedTambolaScoreManager.ScoreInstance.DisableAbilities();
         SpeedTambolaScoreManager.ScoreInstance.ButtonGridBottom.SetActive(true);
         SpeedTambolaScoreManager.ScoreInstance.UnusedAbilities.Clear();
@@ -196,16 +346,18 @@ public class SpeedTambolaGameManager : MonoBehaviour
         store.FourCorners_list.Clear();
         FinishedCombinationsInOrder.Clear();
     }
-
+    public bool IsGameStart;
     void Update()
     {
-        if (SpeedTambolaGameController.Controller.Gameplay && SpeedTambolaGameController.Controller.CentralTimer) UpdateTimer();
-        if (SpeedTambolaGameController.Controller.CentralTimer) UpdateCentralTimer();
+        if (SpeedTambolaGameController.Controller.Gameplay && SpeedTambolaGameController.Controller.CentralTimer && IsGameStart) 
+            UpdateTimer();
+            UpdateCentralTimer();
+        //if (SpeedTambolaGameController.Controller.CentralTimer)
     }
 
     public void SpawnDigits(int min, int max, int amt, List<SpeedTambolaButtonRenderer> grid, List<NumberData> combination, int columnIndex)
     {
-        foreach(SpeedTambolaButtonRenderer button in grid)
+        foreach (SpeedTambolaButtonRenderer button in grid)
         {
             button.cell.interactable = true;
             button.cell.GetComponentInChildren<TextMeshProUGUI>().color = new Color32(0, 0, 0, 255);
@@ -296,9 +448,13 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
     public void timedelay(int count)
     {
+        IsGamestart= true;
         GameObject clone = pool.GetToken();
+
         clone.transform.SetParent(Parent.transform, false);
         clone.transform.localScale = Vector3.one;
+        clone.GetComponentInChildren<TextMeshProUGUI>().fontStyle = FontStyles.Bold;//-----------------------------> *Primery sprites font style
+
         if (shuffleCall[count] >= 0 && shuffleCall[count] <= 15)
         {
             clone.GetComponentInChildren<TextMeshProUGUI>().text = $"B \n{shuffleCall[count].ToString()}";
@@ -350,8 +506,10 @@ public class SpeedTambolaGameManager : MonoBehaviour
                 if (Parent.transform.GetChild(i).GetComponentInChildren<TextMeshProUGUI>().text[0] == 'O')
                     Parent.transform.GetChild(i).GetComponentInChildren<Image>().sprite = SpeedTambolaScoreManager.ScoreInstance.SecondarySprites[4];
 
-                Parent.transform.GetChild(i).GetComponentInChildren<Image>().color = new Color32(255, 255, 255, 50);
+                // Parent.transform.GetChild(i).GetComponentInChildren<Image>().color = new Color32(255, 255, 255, 50);
                 //Parent.transform.GetChild(i).GetChild(0).GetComponentInChildren<TMP_Text>().color = new Color32(255, 255, 255, 100);
+                Parent.transform.GetChild(i).GetComponentInChildren<TextMeshProUGUI>().fontStyle = FontStyles.Normal;     ////--------------------------->*secondry sprites font style
+
                 Parent.transform.GetChild(i).GetComponentInChildren<Image>().SetNativeSize();
             }
         }
@@ -389,15 +547,18 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
     public void UpdateTimer()
     {
+        IsGamestart= false;
         TimerValue -= Time.deltaTime;
         FillValue = TimerValue / TimerDuration;
         CallTimer.fillAmount = FillValue;
+
         if (TimerValue <= 0 && count < 74)
         {
             TimerValue = TimerDuration;
             count++;
             timedelay(count);
         }
+
         if (count >= 74 && TimerValue <= 0)
         {
             //insert condition for traversing through all seventy five numbers
@@ -422,8 +583,9 @@ public class SpeedTambolaGameManager : MonoBehaviour
     public void UpdateCentralTimer()
     {
         TimeSpan remainingTime = endTime - DateTime.Now;
-        Debug.Log($"Remaining Time: {remainingTime}");
-        
+
+        ;
+
         //remainingTime.Minutes;
         //remainingTime.Seconds;
 
@@ -445,16 +607,35 @@ public class SpeedTambolaGameManager : MonoBehaviour
         // 		MessageTime = -1;
         // 	}
         // }
+        float blink = 0;
         float time = (remainingTime.Minutes * 60) + remainingTime.Seconds;
-        if (time <= 10) RemainingTime.color = Color.red;
+        Debug.Log($"Remaining Time: {time}");
+        if (time <= 10)
+        {
+            blink = Mathf.PingPong((float)Time.timeSinceLevelLoad * 5, 1);
+            RemainingTime.color = new Color(1, blink, blink, 1);
+        }
         if (time <= 0)
         {
             Debug.Log("Time is up");
+
             //UIController.instance.ShowLoadingScreen();
+
             SpeedTambolaGameController.Controller.CentralTimer = false;
-            SpeedTambolaGameController.Controller.Gameplay = false;
-            ResultPanel.SetActive(true);
+
+            if (SpeedTambolaGameController.Controller.Gameplay)
+            {
+                ResultPanel.SetActive(true);
+                SpeedTambolaGameController.Controller.Gameplay = false;
+            }
+
             SpeedTambolaGameController.Controller.Results();
+
+
+
+
+
+
         }
     }
 
@@ -972,4 +1153,11 @@ public class SpeedTambolaGameManager : MonoBehaviour
             this.isMarked = isMarked;
         }
     }
+    //[System.Serializable]
+    //public class BotDetailsTambola
+    //{
+    //    public string playerID;
+    //    public string name;
+
+    //}
 }

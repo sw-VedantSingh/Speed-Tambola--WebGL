@@ -116,110 +116,183 @@
       document.body.appendChild(script);
       </script>
 
+      <script>function GetParameterValues(param) {
+              var url = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+              for (var i = 0; i < url.length; i++) {
+                  var urlparam = url[i].split('=');
+                  if (urlparam[0] == param) {
+                      return urlparam[1];
+                  }
+              }
+          }
+          var currentURL = window.location.href;
+          var parts = currentURL.split('/'); // Split the path into an array using '/' as the delimiter
+          var gameName = parts[parts.length - 5];
 
-      <script>window.addEventListener('message', (event) => {
-
+          var operator = GetParameterValues('operator');
+          var return_url = GetParameterValues('return_url');
+          var user = GetParameterValues('user');
+          var token = GetParameterValues('token');
+          var sessiontoken = "";
+          var domainURL = "";
+          window.addEventListener('message', (event) => {
+              console.log('iframe event data' + event.data)
+              var xhr = new XMLHttpRequest();
+              xhr.open('POST', '../controller.php', true);
+              xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+              // Define the action to identify the PHP function to call
+              xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+              // Define a callback function to handle the response
+              xhr.onload = function () {
+                  if (xhr.status === 200) {
+                      var responseText = xhr.responseText;
+                      // Execute the JavaScript code
+                      console.log("iframe php response ::: " + responseText);
+                      eval(responseText);
+                  } else {
+                      alert('Result from PHP: error' + xhr.status);
+                  }
+              };
+              var usertoken = usertoken;
+              // Send the request with data
+              var myObj = JSON.parse(event.data);
+              var dataStr;
+              if (typeof myObj === 'object') {
+                  dataStr = JSON.stringify(myObj.data);
+              } else {
+                  dataStr = myObj;
+              }
+              console.log('action=iframeCommunication&gamename=' + gameName + '&user_Id=' + user + '&user_token=' + token + '&operator=' + operator + '&session_token=' + sessiontoken + '&data=' + dataStr + '&command=' + myObj.command);
+              xhr.send('action=iframeCommunication&gamename=' + gameName + '&user_Id=' + user + '&user_token=' + token + '&operator=' + operator + '&session_token=' + sessiontoken + '&data=' + dataStr + '&command=' + myObj.command + '&status=' + myObj.status);
               // Check the origin of the event to ensure security
-
-              window.applicationInstance.SendMessage("APIController", "SetUserData", event.data);
-
               if (event.origin !== 'https://hrms.unitytech.in/') {
                   return;
               }
           });
-
-
           function InitBet(type, index, game_user_Id, game_Id, metaData, isAbleToCancel, bet_amount) {
-              var data = {
-                  type: type,
-                  Index: index,
-                  Game_user_Id: game_user_Id,
-                  Game_Id: game_Id,
-                  MetaData: metaData,
-                  IsAbleToCancel: isAbleToCancel,
-                  Bet_amount: bet_amount
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var jsondata = {
+                  event: type,
+                  data: {
+                      index: index,
+                      game_user_id: game_user_Id,
+                      game_id: game_Id,
+                      metadata: metaData,
+                      IsAbleToCancel: isAbleToCancel == "" ? "false" : isAbleToCancel,
+                      bet_amount: bet_amount
+                  }
               };
-              var jsonString = JSON.stringify(data);
+              var jsonString = JSON.stringify(jsondata);
+              console.log(jsonString);
               window.parent.postMessage(jsonString, '*');
           }
           function CancelBet(type, id, metaData, game_user_Id, game_Id, amount) {
-              var data = {
-                  type: type,
-                  Id: id,
-                  Game_user_Id: game_user_Id,
-                  Game_Id: game_Id,
-                  MetaData: metaData,
-                  Amount: amount
+
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var jsondata = {
+                  event: type,
+                  data: {
+                      id: id,
+                      game_user_id: game_user_Id,
+                      game_id: game_Id,
+                      metadata: metaData,
+                      amount: amount
+                  }
               };
-              var jsonString = JSON.stringify(data);
+              var jsonString = JSON.stringify(jsondata);
+              console.log(jsonString);
               window.parent.postMessage(jsonString, '*');
           }
           function FinilizeBet(type, id, metaData, game_user_Id, game_Id) {
-              var data = {
-                  type: type,
-                  Id: id,
-                  Game_user_Id: game_user_Id,
-                  Game_Id: game_Id,
-                  MetaData: metaData
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var jsondata = {
+                  event: type,
+                  data: {
+                      id: id,
+                      game_user_id: game_user_Id,
+                      game_id: game_Id,
+                      metadata: metaData
+                  }
               };
-              var jsonString = JSON.stringify(data);
+              var jsonString = JSON.stringify(jsondata);
               window.parent.postMessage(jsonString, '*');
           }
           function WinningsBet(type, id, metaData, game_user_Id, game_Id, amount, spendamount) {
-              var data = {
-                  type: type,
-                  Id: id,
-                  Game_user_Id: game_user_Id,
-                  Game_Id: game_Id,
-                  MetaData: metaData,
-                  Win_amount: amount,
-                  Spend_amount: spendamount
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var jsondata = {
+                  event: type,
+                  data: {
+                      id: id,
+                      game_user_id: game_user_Id,
+                      game_id: game_Id,
+                      metadata: metaData,
+                      Win_amount: amount,
+                      Spend_amount: spendamount
+                  }
               };
-              var jsonString = JSON.stringify(data);
+              var jsonString = JSON.stringify(jsondata);
+              console.log(jsonString);
               window.parent.postMessage(jsonString, '*');
           }
           function AddBet(type, index, id, metaData, game_user_Id, game_Id, amount) {
-              var data = {
-                  type: type,
-                  Id: id,
-                  Index: index,
-                  Game_user_Id: game_user_Id,
-                  Game_Id: game_Id,
-                  MetaData: metaData,
-                  Bet_amount: amount
+
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var jsondata = {
+                  event: type,
+                  data: {
+                      id: id,
+                      index: index,
+                      game_user_id: game_user_Id,
+                      game_id: game_Id,
+                      metadata: metaData,
+                      bet_amount: amount
+                  }
               };
-              var jsonString = JSON.stringify(data);
+              var jsonString = JSON.stringify(jsondata);
+              console.log(jsondata);
               window.parent.postMessage(jsonString, '*');
           }
           var parentUrl = null;
           function Deposit() {
+              if (getParentUrl() == null) {
+              } else {
+                  var res = {
+                      event: 'RequestDeposit',
+                      data: ''
+                  };
+                  var jsonStr = JSON.stringify(res);
+                  window.parent.postMessage(jsonStr, '*');
 
-              if (getParentUrl() = ! null) {
-                  window.parent.postMessage('request_deposit', '*');
               }
           }
-
           function SetFullScreen() {
               if (getParentUrl() == null) {
                   if (document.fullscreenElement) {
-
                       document.exitFullscreen();
-
                   } else {
                       const fullscreenDiv = document.getElementById("fullscreenDiv");
-
                       fullscreenDiv.style.display = "block";
                       fullscreenDiv.requestFullscreen();
-
                   }
               } else {
-                  window.parent.postMessage('fullScreen_window', '*');
-
+                  var res = {
+                      event: 'FullScreen',
+                      data: ''
+                  };
+                  var jsonStr = JSON.stringify(res);
+                  window.parent.postMessage(jsonStr, '*');
               }
           }
-
-
-
           function getParentUrl() {
               var isInIframe = (parent !== window),
                   parentUrl = null;
@@ -228,10 +301,42 @@
               }
               return parentUrl;
           }
-
-
+          function GetBotData() {
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var res = {
+                  event: 'Botdata',
+                  data: ''
+              };
+              var jsonStr = JSON.stringify(res);
+              window.parent.postMessage(jsonStr, '*');
+          }
+          function GetBalance() {
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var res = {
+                  event: 'GetBalance',
+                  data: ''
+              };
+              var jsonStr = JSON.stringify(res);
+              window.parent.postMessage(jsonStr, '*');
+          }
+          function Disconnect(msg) {
+              if (getParentUrl() == null) {
+                  return;
+              }
+              var res = {
+                  event: 'Disconnect',
+                  data: msg
+              };
+              var jsonStr = JSON.stringify(res);
+              window.parent.postMessage(jsonStr, '*');
+          }
           function ExitGame() {
-              // 	close();
+              //  close();
+
               var isInIframe = (parent !== window);
               parentUrl = null;
               if (isInIframe) {
@@ -240,16 +345,28 @@
               if (parentUrl == null) {
                   window.open("https://lootrix.utwebapps.com/exit", "_self");
               } else {
-                  window.parent.postMessage('close_window', '*');
+                  var res = {
+                      event: 'CloseWindow',
+                      data: ''
+                  };
+                  var jsonStr = JSON.stringify(res);
+                  window.parent.postMessage(jsonStr, '*');
               }
           }
-
-
-
           function GetLoginDetails(data) {
-              //  	SetParentUrl();
-              window.parent.postMessage('request_userData', '*');
+              // GetBotData();
+              //      SetParentUrl();
 
+              if (getParentUrl() == null) {
+                  window.applicationInstance.SendMessage("APIController", "SetUserData", "");
+                   return;
+              }
+              var res = {
+                  event: 'Init',
+                  data: ''
+              };
+              var jsonStr = JSON.stringify(res);
+              window.parent.postMessage(jsonStr, '*');
               return;
               var url = window.location.href;
               var url_string = window.location;
@@ -262,9 +379,17 @@
               }
               console.log(name);
               console.log("------------");
-
-              window.applicationInstance.SendMessage("APIController", "GetLoginDataResponseFromWebGL", "" + name);
+              // var userData = {
+              //   Id: user,
+              //   token: token,
+              //   name: uname,
+              //   balance: amount,
+              //   currency_type: currencyType,
+              //   game_Id: 'defaultgame',
+              //   isBlockApiConnection: isPlayFun,
+              //   bootAmount: '',
+              // };
+              // window.applicationInstance.SendMessage("APIController", "GetLoginDataResponseFromWebGL", "" + userData);
           }</script>
-
   </body>
 </html>

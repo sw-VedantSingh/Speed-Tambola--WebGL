@@ -22,84 +22,6 @@ public class PlayerMetaDatas
         public string LobbyName;
     }
 
-
-    public async void AddWinningAmountToOpponent(CoinType cash, string playerid, double amount, double spendAmount, string token, int isBot, string gamePlayed, string gameWon, string gameName, string gameCategories, string lobbyName, int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-        {
-            Debug.LogError("currency flow :::: AddWinningAmountToOpponent not called 1");
-            return;
-        }
-
-        if (isBot == 1 && playerid.Length < 20)
-        {
-            Debug.LogError("currency flow :::: AddWinningAmountToOpponent not called 2 local bot");
-            return;
-        }
-        TransactionMetaData metaData;
-        metaData.gameName = gameName;
-        metaData.gameCategories = gameCategories;
-        metaData.LobbyName = lobbyName;
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["cashType"] = (int)cash + "";
-        data["amount"] = amount + "";
-        data["playerID"] = playerid;
-        data["matchToken"] = token;
-        data["isBot"] = isBot + "";
-        data["metaData"] = JsonUtility.ToJson(metaData);
-
-        ////await APIController.instance.RPCRequest("RPC_AddWinningAmount", data, async (output, success) =>
-        //{
-        //    Debug.LogError("currency flow :::: AddWinningAmountToOpponent :::: " + output);
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            AddWinningAmountToOpponent(cash, playerid, amount, spendAmount, token, isBot, gamePlayed, gameWon, gameName, gameCategories, lobbyName, attempt);
-        //    }
-        //    else
-        //    {
-        //        UpdateMatchStatices(cash, playerid, amount, spendAmount, token, isBot, gamePlayed, gameWon, gameName, gameCategories, lobbyName);
-        //    }
-        //});
-    }
-    public async void SubractAmountFromOpponent(CoinType cash, string playerid, double amount, string token, int isBot, string gameName, string gameCategories, string lobbyName, int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-        {
-            Debug.LogError("currency flow :::: SubractAmountFromOpponent not called 1");
-            return;
-        }
-        if (isBot == 1 && playerid.Length < 20)
-        {
-            Debug.LogError("currency flow :::: AddWinningAmountToOpponent not called 2 local bot");
-            return;
-        }
-        TransactionMetaData metaData;
-        metaData.gameName = gameName;
-        metaData.gameCategories = gameCategories;
-        metaData.LobbyName = lobbyName;
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["cashType"] = (int)cash + "";
-        data["amount"] = amount + "";
-        data["playerID"] = playerid;
-        data["matchToken"] = token;
-        data["isBot"] = isBot + "";
-        data["metaData"] = JsonUtility.ToJson(metaData);
-
-
-        //await APIController.instance.RPCRequest("RPC_SubractAmountFromUser", data, async (output, success) =>
-        //{
-        //    Debug.LogError("currency flow :::: AddWinningAmountToOpponent :::: " + output);
-        //    Debug.LogError("currency flow :::: SubractAmountFromOpponent :::: " + output);
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            SubractAmountFromOpponent(cash, playerid, amount, token, isBot, gameName, gameCategories, lobbyName, attempt);
-        //    }
-        //});
-    }
     #endregion
 
     #region InGame
@@ -120,109 +42,10 @@ public class PlayerMetaDatas
 
     }
 
-    public async void SetMatchLogs(string token, string actionName, string playerId, string amount, int diceVal, int round, bool isBot = false, string fullLog = "", int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-            return;
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["actionName"] = actionName;
-        data["amount"] = amount + "";
-        data["playerID"] = playerId;
-        data["matchToken"] = token;
-        data["isBot"] = isBot + "";
-        data["metaData"] = fullLog;
-        data["diceVal"] = diceVal + "";
-        data["round"] = round + "";
-        Debug.Log("match log called");
-        //await APIController.instance.RPCRequest("RPC_UpdateMatchLog", data, async (output, success) =>
-        //{
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            SetMatchLogs(token, actionName, playerId, amount, diceVal, round, isBot, fullLog, attempt);
-        //    }
-        //    Debug.Log(output + "match log response " + success);
-        //});
-
-    }
     /// <summary>
     ///  game played and game won worked in cash game only
     /// </summary>
-    public async void UpdateMatchStatices(CoinType cash, string playerid, double winAmount, double spendAmount, string token, int isBot, string gamePlayed, string gameWon, string gameName, string gameCategories, string lobbyName, int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-            return;
-        if (isBot == 1 && playerid.Length < 20)
-        {
-            Debug.LogError("currency flow :::: AddWinningAmountToOpponent not called 2 local bot");
-            return;
-        }
-        TransactionMetaData metaData;
-        metaData.gameName = gameName;
-        metaData.gameCategories = gameCategories;
-        metaData.LobbyName = lobbyName;
-
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["cashType"] = (int)cash + "";
-        data["amountSpend"] = spendAmount + "";
-        data["amountWin"] = winAmount + "";
-        data["playerID"] = playerid;
-        data["matchToken"] = token;
-        data["isBot"] = isBot + "";
-        data["isWin"] = (winAmount > 0) ? "1" : "0";
-        data["metaData"] = "";
-        data["gamePlayedKey"] = gamePlayed;
-        data["gameWonKey"] = gameWon;
-        data["metaData"] = JsonUtility.ToJson(metaData);
-
-        //await APIController.instance.RPCRequest("RPC_UpdateMatchStats", data, async (output, success) =>
-        //{
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            UpdateMatchStatices(cash, playerid, winAmount, spendAmount, token, isBot, gamePlayed, gameWon, gameName, gameCategories, lobbyName, attempt);
-        //    }
-        //});
-    }
-    public async void AddMatchPlayersECS(string token, string[] playerList, int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-            return;
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["match_ID"] = token;
-        data["player_list"] = JsonConvert.SerializeObject(playerList);
-        Debug.Log("Match players added :: " + JsonConvert.SerializeObject(playerList));
-        //await APIController.instance.RPCRequest("RPC_AddPlayersToGame", data, async (output, success) =>
-        //{
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            AddMatchPlayersECS(token, playerList, attempt);
-        //    }
-        //});
-    }
-    public async void SetWinnerPlayersECS(string token, string[] playerList, int attempt = 0)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length < 5)
-            return;
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["match_ID"] = token;
-        data["player_list"] = JsonConvert.SerializeObject(playerList);
-        Debug.Log("Match Winner data :: " + JsonConvert.SerializeObject(playerList));
-        //await APIController.instance.RPCRequest("RPC_WinnerToGame", data, async (output, success) =>
-        //{
-        //    if (!success)
-        //    {
-        //        attempt += 1;
-        //        if (attempt < 5)
-        //            SetWinnerPlayersECS(token, playerList, attempt);
-        //    }
-        //});
-    }
-
+   
 
     [System.Serializable]
     public struct MatchCreateECStruct
@@ -239,38 +62,6 @@ public class PlayerMetaDatas
         public int playerCount; // Eg : PlayerCount
     }
 
-    public async void MatchCreateECS(string userId, CoinType cash, string gameType, string matchType, string lobbyName, string roomName, int PlayerCount, Action<string, bool> successAction, Action<string> failureAction)
-    {
-        MatchCreateECStruct match = new MatchCreateECStruct();
-        match.created_by = userId;
-        match.cash_type = (int)cash;
-        match.game_type = gameType;
-        match.match_type = matchType;
-        match.match_date_time = DateTime.Now.ToString("yyyyMMddHHmmssfff");
-        match.lobby_Name = lobbyName;
-        match.room_Name = roomName;
-        match.game = "TCM";//GameController.Instance.CurrentGameMode.ToString().Substring(0, 4);
-        match.amount = 0;  //Mathf.RoundToInt((float)GameController.Instance.currentAmount);
-        match.playerCount = PlayerCount;
-        Debug.LogError("match Create  ECS called");
-
-        Dictionary<string, string> data = new Dictionary<string, string>();
-        data["game_data"] = JsonUtility.ToJson(match);
-        data["date_time"] = DateTime.Now.ToString("yyyyMMddHHmmssfff");
-        //await APIController.instance.RPCRequest("RPC_CreateMatch", data, async (output, success) =>
-        //{
-        //    Debug.LogError(data + "match Create  ECS res " + success);
-        //    if (success)
-        //    {
-        //        successAction.Invoke(output, true);
-        //    }
-        //    else
-        //    {
-        //        failureAction.Invoke(output);
-        //    }
-        //});
-
-    }
 
     #endregion
     #endregion

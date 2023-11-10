@@ -7,7 +7,7 @@ using DG.Tweening;
 
 public class SpeedTambolaScoreManager : MonoBehaviour
 {
-	[SerializeField] TMP_Text ScoreDisplay;
+	[SerializeField] TMP_Text ScoreDisplay ;
 	public GameObject ButtonGridBottom;
 	public int TotalScore = 0;
 	public List<Button> FourRandomButtons;
@@ -124,9 +124,12 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 
 	public void AnyOnTheGrid()
 	{
+		Debug.Log("Anyongrid...in");
 		if (isMeterFull || UnusedAbilityActive)
 		{
-			DisableAbilities();
+            Debug.Log("Anyongrid...out");
+
+            DisableAbilities();
 			FullIndicator.SetActive(false);
             AbilityAndScoreUpdates.transform.GetChild(1).GetComponent<Image>().fillAmount = 1.0f;
             //InactiveAbilities[0].SetActive(true);

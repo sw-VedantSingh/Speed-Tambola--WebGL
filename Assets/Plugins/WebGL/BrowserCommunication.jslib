@@ -4,6 +4,12 @@
   CloseWindow: function () {
   ExitGame();
   },
+  GetUpdatedBalance: function () {
+  GetBalance();
+  },
+  DisconnectGame: function (msg) {
+  Disconnect(UTF8ToString(msg));
+  },
   GetLoginData: function () {
   GetLoginDetails("game");
   },
@@ -12,6 +18,9 @@
   },
   ShowDeposit: function () {
   Deposit();
+  },
+  GetABot: function () {
+  GetBotData();
   },
 
   InitPlayerBet: function (type,index,game_user_Id,game_Id,metaData,isAbleToCancel,bet_amount) {
@@ -30,7 +39,7 @@
    
   WinningsBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),win_amount,spend_amount);
   },
-  AppPlayerBet: function (type,index,id,metaData,game_user_Id,game_Id,amount) {
+  AddPlayerBet: function (type,index,id,metaData,game_user_Id,game_Id,amount) {
    
   AddBet(UTF8ToString(type),UTF8ToString(index),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),amount);
   }	

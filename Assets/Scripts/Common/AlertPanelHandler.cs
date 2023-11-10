@@ -86,6 +86,7 @@ public enum AlertType
     Update,
     Logout,
     Exit,
+    Low
 }
 
 [System.Serializable]

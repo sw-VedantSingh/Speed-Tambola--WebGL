@@ -17,7 +17,7 @@ public class SpeedTambolaPool : MonoBehaviour
 		{
 			tmp = Instantiate(Token, PoolContainer.transform);
 			//tmp.transform.localScale = Vector3.one;
-			//pooledObjectsList.Add(tmp);
+			pooledObjectsList.Add(tmp);
 		}
 	}
 	

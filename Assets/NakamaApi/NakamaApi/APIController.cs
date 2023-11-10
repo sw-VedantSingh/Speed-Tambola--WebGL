@@ -4,7 +4,9 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Text;
-//using Go_Rush;
+using Unity.VisualScripting;
+
+using System.Security.Cryptography;
 
 public class APIController : MonoBehaviour
 {
@@ -14,99 +16,186 @@ public class APIController : MonoBehaviour
     [Header("==============================================")]
 
     #endregion
-    public PlayerData myPlayerData = new PlayerData();
-    public GameData gamedata;
     public Action OnUserDetailsUpdate;
+    public Action OnUserBalanceUpdate;
+    public Action OnUserDeposit;
     public bool isWin = false;
+    public bool IsBotInGame = true;
+
     public UserGameData userDetails;
     public List<BetDetails> betDetails = new List<BetDetails>();
     public bool isPlayByDummyData;
-
-    #region GetLoginDetails&Awake
-
+    public double maxWinAmount;
+    public bool isClickDeopsit= false;
 
 #if UNITY_WEBGL
+    #region WebGl Events
+
     [DllImport("__Internal")]
     public static extern void GetLoginData();
     [DllImport("__Internal")]
+    public static extern void DisconnectGame(string message);
+    [DllImport("__Internal")]
+    public static extern void GetUpdatedBalance();
+    [DllImport("__Internal")]
     public static extern void FullScreen();
     [DllImport("__Internal")]
-    public static extern void ShowDeposit();
+    private static extern void ShowDeposit();
 
     [DllImport("__Internal")]
     public static extern void CloseWindow();
-    [DllImport("__Internal")]
-    public static extern void InitPlayerBet(string type, int index, string game_user_Id, string game_Id, string metaData, bool isAbleToCancel, double bet_amount);
-
-    [DllImport("__Internal")]
-    public static extern void AppPlayerBet(string type, int index, string id, string metaData, string game_user_Id, string game_Id, double bet_amount);
-    [DllImport("__Internal")]
-    public static extern void CancelPlayerBet(string type, string id, string metaData, string game_user_Id, string game_Id, double amount);
-    [DllImport("__Internal")]
-    public static extern void FinilizePlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id);
-    [DllImport("__Internal")]
-    public static extern void WinningsPlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id, double win_amount, double spend_amount);
 
 
+    private Action<BotDetails> GetABotAction;
+    [DllImport("__Internal")]
+    private static extern void GetABot();
 
+    [DllImport("__Internal")]
+    private static extern void InitPlayerBet(string type, int index, string game_user_Id, string game_Id, string metaData, string isAbleToCancel, double bet_amount);
 
+    [DllImport("__Internal")]
+    private static extern void AddPlayerBet(string type, int index, string id, string metaData, string game_user_Id, string game_Id, double bet_amount);
+    [DllImport("__Internal")]
+    private static extern void CancelPlayerBet(string type, string id, string metaData, string game_user_Id, string game_Id, double amount);
+    [DllImport("__Internal")]
+    private static extern void FinilizePlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id);
+    [DllImport("__Internal")]
+    private static extern void WinningsPlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id, double win_amount, double spend_amount);
+
+    #endregion
+
+    #region WebGl Response
+
+    public void GetABotResponse(string data)
+    {
+        Debug.Log("get bot response :::::::----::: " + data);
+
+        BotDetails bot = new BotDetails();
+        bot = JsonUtility.FromJson<BotDetails>(data);
+        GetABotAction?.Invoke(bot);
+        GetABotAction = null;
+    }
+    public void UpdateBalanceResponse(string data)
+    {
+        Debug.Log("Balance Updated response  :::::::----::: " + data);
+        userDetails.balance = double.Parse(data);
+        OnUserBalanceUpdate?.Invoke();
+        if (isClickDeopsit)
+        {
+            isClickDeopsit= false;
+            OnUserDeposit?.Invoke();
+        }
+    }
 
     public void InitPlayerBetResponse(string data)
     {
+        Debug.Log("init bet response :::::::----::: "+data);
         BetResponse response = JsonUtility.FromJson<BetResponse>(data);
+        BetDetails bet = betDetails.Find(x => x.index == response.index);
         if (response.status)
         {
-            BetDetails bet = betDetails.Find(x => x.index == response.index);
             bet.betID = response.message;
             bet.Status = BetProcess.Success;
-
+            bet.action?.Invoke(true);
         }
         else
         {
+            bet.action?.Invoke(false);
             betDetails.RemoveAll(x => x.index == response.index);
         }
+        bet.action = null;
     }
+
     public void CancelPlayerBetResponse(string data)
     {
+        Debug.Log("cancel bet response :::::::----::: " + data);
         BetResponse response = JsonUtility.FromJson<BetResponse>(data);
         if (betDetails.Exists(x => x.index == response.index))
         {
             BetDetails bet = betDetails.Find(x => x.index == response.index);
-            bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+            if (response.status)
+            {
+                bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+                bet.action?.Invoke(true);
+            }
+            else
+            {
+                bet.action?.Invoke(false);
 
+            }
+            bet.action = null;
         }
+
     }
+
     public void AddPlayerBetResponse(string data)
     {
+        Debug.Log("add bet response :::::::----::: " + data);
         BetResponse response = JsonUtility.FromJson<BetResponse>(data);
         if (betDetails.Exists(x => x.index == response.index))
         {
             BetDetails bet = betDetails.Find(x => x.index == response.index);
-            bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+            if (response.status)
+            {
+                bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
 
+                bet.action?.Invoke(true);
+            }
+            else
+            {
+                bet.action?.Invoke(false);
+            }
+            bet.action = null;
         }
     }
+
     public void FinilizePlayerBetResponse(string data)
     {
         BetResponse response = JsonUtility.FromJson<BetResponse>(data);
         if (betDetails.Exists(x => x.index == response.index))
         {
             BetDetails bet = betDetails.Find(x => x.index == response.index);
-            bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+            if (response.status)
+            {
+                bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+                bet.action?.Invoke(true);
+            }
+            else
+            {
+                bet.action?.Invoke(false);
+            }
+            bet.action = null;
         }
 
     }
+
     public void WinningsPlayerBetResponse(string data)
     {
+        Debug.Log("winning bet response :::::::----::: " + data);
         BetResponse response = JsonUtility.FromJson<BetResponse>(data);
         if (betDetails.Exists(x => x.index == response.index))
         {
             BetDetails bet = betDetails.Find(x => x.index == response.index);
-            bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+            if (response.status)
+            {
+                bet.Status = response.status ? BetProcess.Success : BetProcess.Failed;
+                bet.action?.Invoke(true);
+            }
+            else
+            {
+                bet.action?.Invoke(false);
+            }
+            bet.action = null;
         }
     }
+    #endregion
 
 #endif
+    public void OnClickDepositBtn()
+    {
+        isClickDeopsit = true;
+        ShowDeposit();
+    }
 
     public void SetUserData(string data)
     {
@@ -116,21 +205,28 @@ public class APIController : MonoBehaviour
             userDetails = new UserGameData();
             userDetails.balance = 5000;
             userDetails.currency_type = "USD";
-            //userDetails.Id = UnityEngine.Random.Range(5000, 500000) + SystemInfo.deviceUniqueIdentifier.ToGuid().ToString();
-            //userDetails.token = UnityEngine.Random.Range(5000, 500000) + SystemInfo.deviceUniqueIdentifier.ToGuid().ToString();
+            userDetails.Id = UnityEngine.Random.Range(5000, 500000) + SystemInfo.deviceUniqueIdentifier.ToGuid().ToString();
+            userDetails.token = UnityEngine.Random.Range(5000, 500000) + SystemInfo.deviceUniqueIdentifier.ToGuid().ToString();
             //userDetails.name = SystemInfo.deviceName + SystemInfo.deviceModel;
             userDetails.name = "User_" + UnityEngine.Random.Range(100, 999);
             isPlayByDummyData = true;
+            userDetails.hasBot = true;
+            userDetails.isBlockApiConnection = true;
+
         }
         else
         {
             userDetails = JsonUtility.FromJson<UserGameData>(data);
             isPlayByDummyData = userDetails.isBlockApiConnection;
+            isWin = userDetails.isWin;
+            maxWinAmount = userDetails.maxWin;
         }
+        IsBotInGame = userDetails.hasBot;
         if (userDetails.bootAmount == 0)
             userDetails.bootAmount = 25;
         Debug.Log(JsonUtility.ToJson(userDetails));
         OnUserDetailsUpdate?.Invoke();
+        OnUserBalanceUpdate?.Invoke();
     }
 
     public void GetLoginDataResponseFromWebGL(string data)
@@ -147,10 +243,8 @@ public class APIController : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log("$$$ %%%%%%%%%%%%%%%%%%%%%%%%%%");
         instance = this;
     }
-    #endregion
 
     public PlayerData GeneratePlayerDataForBot(string botAccountData)
     {
@@ -173,10 +267,28 @@ public class APIController : MonoBehaviour
     #region API
     int id = 0;
 
-    public int InitlizeBet(double amount, string metadata, bool isAbleToCancel = false)
+    public void GetBot(Action<BotDetails> action)
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        GetABotAction = action;
+        GetABot();
+
+#endif
+    }
+
+    public int InitlizeBet(double amount, TransactionMetaData metadata, bool isAbleToCancel = false, Action<bool> action = null, string playerId = "")
     {
         if (isPlayByDummyData)
+        {
+            Debug.Log(amount);
+            if(playerId == "" || playerId == userDetails.Id)
+            {
+                userDetails.balance -= amount;
+                OnUserBalanceUpdate.Invoke();
+            }
+            action?.Invoke(true);
             return 0;
+        }
         id += 1;
         if (id > 1000)
             id = 1;
@@ -194,20 +306,29 @@ public class APIController : MonoBehaviour
         bet.index = id;
         bet.betID = id.ToString();
         bet.Status = BetProcess.Processing;
-        bet.IsAbleToCancel = isAbleToCancel;
+        bet.IsAbleToCancel = isAbleToCancel ? "true" : "false";
         betDetails.Add(bet);
 #if UNITY_WEBGL
         Debug.Log("Init Bet Data");
-        InitPlayerBet("InitlizeBet",id,userDetails.Id,userDetails.game_Id,metadata,isAbleToCancel,amount);
+        bet.action = action;
+        InitPlayerBet("InitlizeBet",id,userDetails.Id, playerId == "" ? userDetails.Id : playerId, JsonUtility.ToJson(metadata),bet.IsAbleToCancel,amount);
 #endif
         return id;
     }
 
 
-    public void AddBet(double amount, string metadata, int index)
+    public void AddBet(int index, TransactionMetaData metadata, double amount,Action<bool> action = null, string playerId = "")
     {
         if (isPlayByDummyData)
+        {
+            if (playerId == "" || playerId == userDetails.Id)
+            {
+                userDetails.balance -= amount;
+                OnUserBalanceUpdate.Invoke();
+            }
+            action?.Invoke(true);
             return;
+        }
 
 
         foreach (var item in betDetails)
@@ -219,59 +340,57 @@ public class APIController : MonoBehaviour
         {
             BetDetails bet = betDetails.Find(x => x.index == index);
 
-            //var data = new
-            //{
-
-            //    type = "AddBet",
-            //    Index = index,
-            //    Id = bet.betID,
-            //    MetaData = metadata,
-            //    Game_user_Id = userDetails.Id,
-            //    Game_Id = userDetails.game_Id,
-            //    Bet_amount = amount
-            //};
 #if UNITY_WEBGL
             Debug.Log("Add Bet Data");
-            AppPlayerBet("AddBet",index,bet.betID,metadata,userDetails.Id,userDetails.game_Id,amount);
+            bet.action = action;
+            AddPlayerBet("AddBet",index,bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount);
 #endif
         }
     }
 
-    public void CancelBet(int index, string metadata, double amount)
+    public void CancelBet(int index, string metadata, double amount, Action<bool> action = null, string playerId = "")
     {
         if (isPlayByDummyData)
+        {
+            if (playerId == "" || playerId == userDetails.Id)
+            {
+                userDetails.balance += amount;
+                OnUserBalanceUpdate.Invoke();
+            }
+            action?.Invoke(true);
             return;
+        }
+
         if (betDetails.Exists(x => x.index == index))
         {
             BetDetails bet = betDetails.Find(x => x.index == index);
-            if (!bet.IsAbleToCancel)
+            bet.action = action;
+
+            if (bet.IsAbleToCancel == "false")
             {
                 bet.Status = BetProcess.Failed;
                 return;
             }
             bet.Status = BetProcess.Processing;
-            //var data = new
-            //{
-            //    type = "CancelBet",
-            //    Id = bet.betID,
-            //    MetaData = metadata,
-            //    Game_user_Id = userDetails.Id,
-            //    Game_Id = userDetails.game_Id,
-            //};
 #if UNITY_WEBGL
             Debug.Log("Cancel Bet Data");
-            CancelPlayerBet("CancelBet",bet.betID,metadata,userDetails.Id,userDetails.game_Id,amount);
+            CancelPlayerBet("CancelBet",bet.betID,metadata, playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount);
 #endif
         }
     }
-    public void FinilizeBet(int index, string metadata)
+    public void FinilizeBet(int index, TransactionMetaData metadata,Action<bool> action = null, string playerId = "")
     {
         if (isPlayByDummyData)
+        {
+            action?.Invoke(true);
             return;
+        }
+
         if (betDetails.Exists(x => x.index == index))
         {
             BetDetails bet = betDetails.Find(x => x.index == index);
-            if (!bet.IsAbleToCancel)
+            bet.action = action;
+            if (bet.IsAbleToCancel == "false")
             {
                 bet.Status = BetProcess.Failed;
                 return;
@@ -287,20 +406,33 @@ public class APIController : MonoBehaviour
             //};
 #if UNITY_WEBGL
             Debug.Log("Finalize Bet Data");
-            FinilizePlayerBet("FinilizeBet",bet.betID,metadata,userDetails.Id,userDetails.game_Id);
+            FinilizePlayerBet("FinilizeBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id);
 #endif
         }
 
     }
 
-    public void WinningsBet(int index, double amount, double spend_amount, string metadata)
+    public void WinningsBet(int index, double amount, double spend_amount, TransactionMetaData metadata,Action<bool> action = null,string playerId = "")
     {
+
+    
         if (isPlayByDummyData)
+        {
+            if (playerId == "" || playerId == userDetails.Id)
+            {
+                Debug.Log("Winning Bet Data **********");
+                userDetails.balance += amount;
+                OnUserBalanceUpdate.Invoke();
+            }
+            action?.Invoke(true);
             return;
+        }
+
         if (betDetails.Exists(x => x.index == index ))
         {
             BetDetails bet = betDetails.Find(x => x.index == index);
             bet.Status = BetProcess.Processing;
+            bet.action = action;
             //var data = new
             //{
             //    type = "WinningsBet",
@@ -313,7 +445,7 @@ public class APIController : MonoBehaviour
             //};
 #if UNITY_WEBGL
             Debug.Log("Winning Bet Data");
-            WinningsPlayerBet("WinningsBet",bet.betID,metadata,userDetails.Id,userDetails.game_Id,amount,spend_amount);
+            WinningsPlayerBet("WinningsBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId,userDetails.game_Id,amount,spend_amount);
 #endif
         }
     }
@@ -329,7 +461,7 @@ public class APIController : MonoBehaviour
         }
         return BetProcess.Failed;
     }
-    #endregion
+#endregion
 }
 
 [System.Serializable]
@@ -343,16 +475,27 @@ public class UserGameData
     public string game_Id;
     public bool isBlockApiConnection;
     public double bootAmount;
+    public bool isWin;
+    public bool hasBot;
+    public float commission;
+    public float maxWin;
 }
 
-
+[System.Serializable]
+public class TransactionMetaData
+{
+    public double Amount;
+    public string Info;
+}
 [System.Serializable]
 public class BetDetails
 {
     public string betID;
     public int index;
     public BetProcess Status;
-    public bool IsAbleToCancel;
+    public string IsAbleToCancel;
+    public Action<bool> action;
+
 }
 
 public enum BetProcess
@@ -368,4 +511,24 @@ public class BetResponse
     public bool status;
     public string message;
     public int index;
+}
+
+
+[System.Serializable]
+public class BotDetails
+{
+    public string Id;
+    public string name;
+    public double balance;
+}
+public static class MatchExtensions
+{
+    public static Guid ToGuid(this string id)
+    {
+        MD5CryptoServiceProvider provider = new MD5CryptoServiceProvider();
+        byte[] inputBytes = Encoding.Default.GetBytes(id);
+        byte[] hashBytes = provider.ComputeHash(inputBytes);
+
+        return new Guid(hashBytes);
+    }
 }
