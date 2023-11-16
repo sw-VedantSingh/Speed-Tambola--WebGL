@@ -52,11 +52,13 @@ public class MatchMakingTambola : MonoBehaviour
         //GameInitialize();
 
 
+        UpdateWaitingLobby(count);
 
     }
     public void Showmatching()
     {
-        Invoke(nameof(MatchMakingTambola.Instance.StopScrolling), 1f);
+
+        Invoke(nameof(MatchMakingTambola.Instance.StopScrolling), 5f);
         if (!this.gameObject.activeSelf)
         {
             this.gameObject.SetActive(true);
@@ -116,8 +118,16 @@ public class MatchMakingTambola : MonoBehaviour
     {
         Debug.Log("Here one");
         //OpponentName.text = CarromGameManager.localInstance.gameState.players.Find(x => x.playerData.playerID != GameController.Instance.my_PlayerData.playerID).playerData.playerName;
+
         CountdownTxt.text = "Game will start in ";
         counttext.text = "" + count;
+
+        if (count <= 0)
+        {
+            this.gameObject.SetActive(false);
+            SpeedTambolaGameController.Controller.Gameplaypanel.SetActive(true);
+            SpeedTambolaGameManager.Instance.IsGameStart = true;
+        }
 
     }
 
@@ -157,6 +167,7 @@ public class MatchMakingTambola : MonoBehaviour
     public IEnumerator ScrollOpponentImg()
     {
         this.gameObject.SetActive(true);
+       // yield return new WaitForSeconds(1f);
         CountdownTxt.gameObject.SetActive(true);
         CountdownTxt.enabled = true;
 
@@ -196,8 +207,9 @@ public class MatchMakingTambola : MonoBehaviour
         {
             Debug.Log("Finded opponenet player");
             StartCoroutine(StartGameCount());
+            
             ConnectingToServer.gameObject.SetActive(false);
-            CountdownTxt.gameObject.SetActive(true);
+            //CountdownTxt.gameObject.SetActive(true);
 
 
             OpponentAvatarImg.transform.parent.GetComponent<RectTransform>().DOAnchorPosY(0, 1).SetEase(Ease.OutExpo).OnComplete(() => { OpponentName.gameObject.SetActive(true); CountdownTxt.gameObject.SetActive(true); });
@@ -214,28 +226,20 @@ public class MatchMakingTambola : MonoBehaviour
         SpeedTambolaGameManager.Instance.endTime = SpeedTambolaGameManager.Instance.startTime.AddSeconds(SpeedTambolaGameManager.Instance.TotalTimeRemaining);
 
     }
-
-    private IEnumerator StartGameCount()
+    public  int count = 4;
+    public IEnumerator StartGameCount()
     {
+      //  yield return new WaitForSeconds(1f);
+       // CountdownTxt.text = "Game will start in ";
         yield return new WaitForEndOfFrame();
-        int count = 4;
+ 
         for (int i = count; i > 0; i--)
         {
             yield return new WaitForSeconds(1);
             count -= 1;
             UpdateWaitingLobby(count);
 
-            if (count <= 0)
-            {
-                this.gameObject.SetActive(false);
-                SpeedTambolaGameController.Controller.Gameplaypanel.SetActive(true);
-                SpeedTambolaGameManager.Instance.IsGameStart = true;
-                //if (SpeedTambolaGameController.Controller.Gameplay)
-                yield return new WaitForSeconds(1);
-
-                //Invoke(nameof(SpeedTambolaGameManager.Instance.RestartGame), 1 / 60);
-                yield break;
-            }
+          
         }
         //gameObject.GetComponent<GameStarter>().StartGame();
 

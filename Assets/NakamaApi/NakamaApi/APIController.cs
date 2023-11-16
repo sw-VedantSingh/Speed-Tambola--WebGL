@@ -21,12 +21,13 @@ public class APIController : MonoBehaviour
     public Action OnUserDeposit;
     public bool isWin = false;
     public bool IsBotInGame = true;
-
+    public GameWinningStatus winningStatus;
     public UserGameData userDetails;
     public List<BetDetails> betDetails = new List<BetDetails>();
     public bool isPlayByDummyData;
     public double maxWinAmount;
     public bool isClickDeopsit= false;
+    public string testJson;
 
 #if UNITY_WEBGL
     #region WebGl Events
@@ -65,7 +66,11 @@ public class APIController : MonoBehaviour
     #endregion
 
     #region WebGl Response
-
+    [ContextMenu("check json")]
+    public void CheckJson()
+    {
+        InitPlayerBetResponse(testJson);
+    }
     public void GetABotResponse(string data)
     {
         Debug.Log("get bot response :::::::----::: " + data);
@@ -82,7 +87,6 @@ public class APIController : MonoBehaviour
         OnUserBalanceUpdate?.Invoke();
         if (isClickDeopsit)
         {
-            isClickDeopsit= false;
             OnUserDeposit?.Invoke();
         }
     }
@@ -90,11 +94,14 @@ public class APIController : MonoBehaviour
     public void InitPlayerBetResponse(string data)
     {
         Debug.Log("init bet response :::::::----::: "+data);
-        BetResponse response = JsonUtility.FromJson<BetResponse>(data);
+        InitBetDetails response = JsonUtility.FromJson<InitBetDetails>(data);
         BetDetails bet = betDetails.Find(x => x.index == response.index);
         if (response.status)
         {
-            bet.betID = response.message;
+            winningStatus = response.message;
+            Debug.Log("init bet response :::::::----::: " + response.message);
+            Debug.Log("init bet response :::::::----::: " + winningStatus.Id);
+            bet.betID = winningStatus.Id;
             bet.Status = BetProcess.Success;
             bet.action?.Invoke(true);
         }
@@ -464,6 +471,29 @@ public class APIController : MonoBehaviour
 #endregion
 }
 
+
+public class InitBetDetails
+{
+    public bool status;
+    public GameWinningStatus message;
+    public int index;
+}
+
+[System.Serializable]
+public class GameWinningStatus
+{
+    public string Id;
+
+    public double Amount;
+
+    public double Max_Win;
+
+    public bool Is_Win;
+    public string Game_Id;
+    public string Operator;
+    public DateTime create_at;
+
+}
 [System.Serializable]
 public class UserGameData
 {

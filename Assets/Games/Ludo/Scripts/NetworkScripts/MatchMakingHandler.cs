@@ -441,7 +441,7 @@ public class MatchMakingHandler : UIHandler
             {
                 OpponentName.gameObject.SetActive(true);
                 ConnectingToServer.gameObject.SetActive(false);
-                CountdownTxt.SetActive(true);
+               // CountdownTxt.SetActive(true);
                 //    UIController.instance.confirmationPopUpHandler.HideMe();
                 OpponentName.text = null;//GameManager.localInstance.gameState.players.Find(x => x.playerData.playerID != GameManager.localInstance.myPlayerID).playerData.playerName;
                 MyName.text = "";//GameManager.localInstance.gameState.players.Find(x => x.playerData.playerID == GameManager.localInstance.myPlayerID).playerData.playerName;

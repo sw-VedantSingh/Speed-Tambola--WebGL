@@ -271,9 +271,12 @@ public class SpeedTambolaGameManager : MonoBehaviour
     // {
     // 	matchController.ExitGame();
     // }
-
+   // public int count;
     public void RestartGame()
     {
+        MatchMakingTambola.Instance.count = 4;
+       MatchMakingTambola.Instance.UpdateWaitingLobby(MatchMakingTambola.Instance.count);
+
         if (APIController.instance.userDetails.balance <= 0)
         {
             SpeedTambolaGameController.Controller.ShowInsufficientPopUp();

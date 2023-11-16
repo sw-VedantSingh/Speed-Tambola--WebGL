@@ -16,7 +16,7 @@ public class HOWTOPLAY : MonoBehaviour
     float bulletIndent = 1.6f;
     float leftMargin = 1f;
     public bool isInEditMode;
-    public 
+    
     void Start()
     {
        // FormetText();

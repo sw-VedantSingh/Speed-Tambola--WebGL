@@ -66,6 +66,7 @@ public class SpeedTambolaGameController : MonoBehaviour
     {
 
         SpeedTambolaGameManager.Instance.ResultPanel.SetActive(false);
+        MatchMakingTambola.Instance.CountdownTxt.gameObject.SetActive(true);
 
         MatchMakingTambola.Instance.Showmatching();
         SpeedTambolaGameManager.Instance.RestartGame();
