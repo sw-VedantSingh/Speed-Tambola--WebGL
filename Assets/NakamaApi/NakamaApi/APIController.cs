@@ -52,16 +52,16 @@ public class APIController : MonoBehaviour
     private static extern void GetABot();
 
     [DllImport("__Internal")]
-    private static extern void InitPlayerBet(string type, int index, string game_user_Id, string game_Id, string metaData, string isAbleToCancel, double bet_amount);
+    private static extern void InitPlayerBet(string type, int index, string game_user_Id, string game_Id, string metaData, string isAbleToCancel, double bet_amount,int isBot);
 
     [DllImport("__Internal")]
-    private static extern void AddPlayerBet(string type, int index, string id, string metaData, string game_user_Id, string game_Id, double bet_amount);
+    private static extern void AddPlayerBet(string type, int index, string id, string metaData, string game_user_Id, string game_Id, double bet_amount, int isBot);
     [DllImport("__Internal")]
-    private static extern void CancelPlayerBet(string type, string id, string metaData, string game_user_Id, string game_Id, double amount);
+    private static extern void CancelPlayerBet(string type, string id, string metaData, string game_user_Id, string game_Id, double amount, int isBot);
     [DllImport("__Internal")]
-    private static extern void FinilizePlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id);
+    private static extern void FinilizePlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id, int isBot);
     [DllImport("__Internal")]
-    private static extern void WinningsPlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id, double win_amount, double spend_amount);
+    private static extern void WinningsPlayerBet(string type, string id, string metadata, string game_user_Id, string game_Id, double win_amount, double spend_amount, int isBot);
 
     #endregion
 
@@ -77,6 +77,8 @@ public class APIController : MonoBehaviour
 
         BotDetails bot = new BotDetails();
         bot = JsonUtility.FromJson<BotDetails>(data);
+        userDetails.isWin = !bot.isWin;
+        isWin = !bot.isWin;
         GetABotAction?.Invoke(bot);
         GetABotAction = null;
     }
@@ -173,7 +175,6 @@ public class APIController : MonoBehaviour
             }
             bet.action = null;
         }
-
     }
 
     public void WinningsPlayerBetResponse(string data)
@@ -197,13 +198,13 @@ public class APIController : MonoBehaviour
     }
     #endregion
 
-#endif
+
     public void OnClickDepositBtn()
     {
         isClickDeopsit = true;
         ShowDeposit();
     }
-
+#endif
     public void SetUserData(string data)
     {
         Debug.Log("Response from webgl ::::: " + data);
@@ -247,12 +248,10 @@ public class APIController : MonoBehaviour
         SetUserData("");
 #endif
     }
-
     private void Awake()
     {
         instance = this;
     }
-
     public PlayerData GeneratePlayerDataForBot(string botAccountData)
     {
         BotData account = JsonUtility.FromJson<BotData>(botAccountData);
@@ -270,7 +269,6 @@ public class APIController : MonoBehaviour
         player.totalWinnings = walletData.NetWinning;
         return player;
     }
-
     #region API
     int id = 0;
 
@@ -279,11 +277,10 @@ public class APIController : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         GetABotAction = action;
         GetABot();
-
 #endif
     }
 
-    public int InitlizeBet(double amount, TransactionMetaData metadata, bool isAbleToCancel = false, Action<bool> action = null, string playerId = "")
+    public int InitlizeBet(double amount, TransactionMetaData metadata, bool isAbleToCancel = false, Action<bool> action = null, string playerId = "", bool isBot = false)
     {
         if (isPlayByDummyData)
         {
@@ -318,13 +315,12 @@ public class APIController : MonoBehaviour
 #if UNITY_WEBGL
         Debug.Log("Init Bet Data");
         bet.action = action;
-        InitPlayerBet("InitlizeBet",id,userDetails.Id, playerId == "" ? userDetails.Id : playerId, JsonUtility.ToJson(metadata),bet.IsAbleToCancel,amount);
+        InitPlayerBet("InitlizeBet",id,userDetails.Id, playerId == "" ? userDetails.Id : playerId, JsonUtility.ToJson(metadata),bet.IsAbleToCancel,amount,isBot?1:0);
 #endif
         return id;
     }
 
-
-    public void AddBet(int index, TransactionMetaData metadata, double amount,Action<bool> action = null, string playerId = "")
+    public void AddBet(int index, TransactionMetaData metadata, double amount,Action<bool> action = null, string playerId = "", bool isBot = false)
     {
         if (isPlayByDummyData)
         {
@@ -336,7 +332,6 @@ public class APIController : MonoBehaviour
             action?.Invoke(true);
             return;
         }
-
 
         foreach (var item in betDetails)
         {
@@ -350,12 +345,12 @@ public class APIController : MonoBehaviour
 #if UNITY_WEBGL
             Debug.Log("Add Bet Data");
             bet.action = action;
-            AddPlayerBet("AddBet",index,bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount);
+            AddPlayerBet("AddBet",index,bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount, isBot ? 1 : 0);
 #endif
         }
     }
 
-    public void CancelBet(int index, string metadata, double amount, Action<bool> action = null, string playerId = "")
+    public void CancelBet(int index, string metadata, double amount, Action<bool> action = null, string playerId = "", bool isBot = false)
     {
         if (isPlayByDummyData)
         {
@@ -381,11 +376,11 @@ public class APIController : MonoBehaviour
             bet.Status = BetProcess.Processing;
 #if UNITY_WEBGL
             Debug.Log("Cancel Bet Data");
-            CancelPlayerBet("CancelBet",bet.betID,metadata, playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount);
+            CancelPlayerBet("CancelBet",bet.betID,metadata, playerId == "" ? userDetails.Id : playerId, userDetails.game_Id,amount, isBot ? 1 : 0);
 #endif
         }
     }
-    public void FinilizeBet(int index, TransactionMetaData metadata,Action<bool> action = null, string playerId = "")
+    public void FinilizeBet(int index, TransactionMetaData metadata,Action<bool> action = null, string playerId = "", bool isBot = false)
     {
         if (isPlayByDummyData)
         {
@@ -413,13 +408,13 @@ public class APIController : MonoBehaviour
             //};
 #if UNITY_WEBGL
             Debug.Log("Finalize Bet Data");
-            FinilizePlayerBet("FinilizeBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id);
+            FinilizePlayerBet("FinilizeBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId, userDetails.game_Id, isBot ? 1 : 0);
 #endif
         }
 
     }
 
-    public void WinningsBet(int index, double amount, double spend_amount, TransactionMetaData metadata,Action<bool> action = null,string playerId = "")
+    public void WinningsBet(int index, double amount, double spend_amount, TransactionMetaData metadata,Action<bool> action = null,string playerId = "", bool isBot = false)
     {
 
     
@@ -452,7 +447,7 @@ public class APIController : MonoBehaviour
             //};
 #if UNITY_WEBGL
             Debug.Log("Winning Bet Data");
-            WinningsPlayerBet("WinningsBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId,userDetails.game_Id,amount,spend_amount);
+            WinningsPlayerBet("WinningsBet",bet.betID, JsonUtility.ToJson(metadata), playerId == "" ? userDetails.Id : playerId,userDetails.game_Id,amount,spend_amount, isBot ? 1 : 0);
 #endif
         }
     }
@@ -480,20 +475,24 @@ public class InitBetDetails
 }
 
 [System.Serializable]
+public class MinMaxOffest
+{
+    public float min;
+    public float max;
+}
+
+[System.Serializable]
 public class GameWinningStatus
 {
     public string Id;
-
     public double Amount;
-
-    public double Max_Win;
-
-    public bool Is_Win;
+    public MinMaxOffest WinCutOff;
+    public float WinProbablity;
     public string Game_Id;
     public string Operator;
     public DateTime create_at;
-
 }
+
 [System.Serializable]
 public class UserGameData
 {
@@ -550,6 +549,7 @@ public class BotDetails
     public string Id;
     public string name;
     public double balance;
+    public bool isWin;
 }
 public static class MatchExtensions
 {

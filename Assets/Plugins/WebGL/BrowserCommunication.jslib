@@ -23,26 +23,28 @@
   GetBotData();
   },
 
-  InitPlayerBet: function (type,index,game_user_Id,game_Id,metaData,isAbleToCancel,bet_amount) {
+  InitPlayerBet: function (type,index,game_user_Id,game_Id,metaData,isAbleToCancel,bet_amount,isBot) {
    
-    InitBet(UTF8ToString(type),index,UTF8ToString(game_user_Id),UTF8ToString(game_Id),UTF8ToString(metaData),UTF8ToString(isAbleToCancel),bet_amount);
+    InitBet(UTF8ToString(type),index,UTF8ToString(game_user_Id),UTF8ToString(game_Id),UTF8ToString(metaData),UTF8ToString(isAbleToCancel),bet_amount,isBot);
   },
-  CancelPlayerBet: function (type,id,metaData,game_user_Id,game_Id,amount) {
+  CancelPlayerBet: function (type,id,metaData,game_user_Id,game_Id,amount,isBot) {
     
-  CancelBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),amount);
+  CancelBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),amount,isBot);
   },
-  FinilizePlayerBet: function (type,id,metaData,game_user_Id,game_Id) {
+  FinilizePlayerBet: function (type,id,metaData,game_user_Id,game_Id,isBot) {
       
-  FinilizeBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id));
+  FinilizeBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),isBot);
   },
-  WinningsPlayerBet: function (type,id,metaData,game_user_Id,game_Id,win_amount,spend_amount) {
+  WinningsPlayerBet: function (type,id,metaData,game_user_Id,game_Id,win_amount,spend_amount,isBot) {
    
-  WinningsBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),win_amount,spend_amount);
+  WinningsBet(UTF8ToString(type),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),win_amount,spend_amount,isBot);
   },
-  AddPlayerBet: function (type,index,id,metaData,game_user_Id,game_Id,amount) {
+  AddPlayerBet: function (type,index,id,metaData,game_user_Id,game_Id,amount,isBot) {
    
-  AddBet(UTF8ToString(type),UTF8ToString(index),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),amount);
-  }	
-
-
+  AddBet(UTF8ToString(type),UTF8ToString(index),UTF8ToString(id),UTF8ToString(metaData),UTF8ToString(game_user_Id),UTF8ToString(game_Id),amount,isBot);
+  },
+  GetRandomPrediction: function(type,rowCount,columnCount,predictedCount)
+  {
+    GetRandomPrediction(UTF8ToString(type),rowCount,columnCount,predictedCount);
+  }
 });

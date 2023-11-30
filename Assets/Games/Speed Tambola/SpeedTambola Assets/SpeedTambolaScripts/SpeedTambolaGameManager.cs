@@ -81,9 +81,9 @@ public class SpeedTambolaGameManager : MonoBehaviour
     public TMP_Text LoserBetAmt_Txt;
     public int betIndex;
     public bool IsGameFinished;
-    // public List<BotDetailsTambola> botdata;
-
-    // public List<botdata> Balances;
+    public AudioSource BingoSuccess;
+    public AudioSource BingoFail;
+    public AudioSource ButtonClick;
     public bool IsGamestart;
     void Awake()
     {
@@ -104,12 +104,6 @@ public class SpeedTambolaGameManager : MonoBehaviour
         APIController.instance.OnUserBalanceUpdate += InitAmountDetails;
         APIController.instance.OnUserDeposit += OnDepositeActionCall;
         InitialSpawningNum();
-
-
-
-
-
-
         Invoke(nameof(InitialBetInGame), 2f);
     }
     public void InitialSpawningNum()
@@ -125,8 +119,8 @@ public class SpeedTambolaGameManager : MonoBehaviour
             SpawnShuffled();
             timedelay(count);
             /*new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute + Mathf.FloorToInt(TotalTimeRemaining / 60), startTime.Second + (int)(TotalTimeRemaining % 60));*/
-            Debug.Log($"End Time: {endTime}");
-            Debug.Log($"Start Time: {startTime}");
+            //Debug.Log($"End Time: {endTime}");
+            //Debug.Log($"Start Time: {startTime}");
         }
 
 
@@ -240,12 +234,12 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
     }
 
-    void OnEnable()
-    {
-        //ShowMe();
-        // Invoke(nameof(RestartGame), 1 / 60);
+    //void OnEnable()
+    //{
+    //    //ShowMe();
+    //    // Invoke(nameof(RestartGame), 1 / 60);
 
-    }
+    //}
     private void OnDisable()
     {
         APIController.instance.OnUserDetailsUpdate -= SubscribeToEvent;
@@ -281,6 +275,12 @@ public class SpeedTambolaGameManager : MonoBehaviour
         {
             SpeedTambolaGameController.Controller.ShowInsufficientPopUp();
         }
+        TransactionMetaData metadata = new TransactionMetaData();
+        metadata.Amount = WinningBetAmt;
+        metadata.Info = "Undecided";
+        APIController.instance.WinningsBet(betIndex, WinningBetAmt, APIController.instance.userDetails.bootAmount, metadata);
+        SpeedTambolaScoreManager.ScoreInstance.isAbilityActive = false;
+        SpeedTambolaScoreManager.ScoreInstance.flag = false;
         // ResultPanel.SetActive(false);
         IsGameFinished = false;
         RemainingTime.color = Color.white;
@@ -595,21 +595,7 @@ public class SpeedTambolaGameManager : MonoBehaviour
         float parse = Mathf.FloorToInt(TotalTimerValue / 60);
         float seconds = Mathf.FloorToInt(TotalTimerValue % 60);
         RemainingTime.text = string.Format("{0:00}:{1:00}", remainingTime.Minutes, remainingTime.Seconds);
-        // if (CommonWaitingHandler.instance)
-        // 	CommonWaitingHandler.instance.UpdateGameTimer(RemainingTime.text);
-        // if (TotalTimerValue <= 20 && MessageTime > 0)
-        // {
-        // 	// SpeedTambolaScoreManager.ScoreInstance.Label.gameObject.SetActive(true);
-        // 	// SpeedTambolaScoreManager.ScoreInstance.Label.text = "Last 20 Seconds!";
-        // 	MessageTime -= Time.deltaTime;
-
-        // 	if (MessageTime <= 0)
-        // 	{
-        // 		// SpeedTambolaScoreManager.ScoreInstance.Label.gameObject.SetActive(false);
-        // 		// SpeedTambolaScoreManager.ScoreInstance.Label.text = string.Empty;
-        // 		MessageTime = -1;
-        // 	}
-        // }
+        
         float blink = 0;
         float time = (remainingTime.Minutes * 60) + remainingTime.Seconds;
         Debug.Log($"Remaining Time: {time}");
@@ -626,11 +612,9 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
             SpeedTambolaGameController.Controller.CentralTimer = false;
 
-            if (SpeedTambolaGameController.Controller.Gameplay)
-            {
                 ResultPanel.SetActive(true);
+                Debug.Log("Time is up 2");
                 SpeedTambolaGameController.Controller.Gameplay = false;
-            }
 
             SpeedTambolaGameController.Controller.Results();
 
@@ -641,6 +625,21 @@ public class SpeedTambolaGameManager : MonoBehaviour
 
         }
     }
+    // if (CommonWaitingHandler.instance)
+    // 	CommonWaitingHandler.instance.UpdateGameTimer(RemainingTime.text);
+    // if (TotalTimerValue <= 20 && MessageTime > 0)
+    // {
+    // 	// SpeedTambolaScoreManager.ScoreInstance.Label.gameObject.SetActive(true);
+    // 	// SpeedTambolaScoreManager.ScoreInstance.Label.text = "Last 20 Seconds!";
+    // 	MessageTime -= Time.deltaTime;
+
+    // 	if (MessageTime <= 0)
+    // 	{
+    // 		// SpeedTambolaScoreManager.ScoreInstance.Label.gameObject.SetActive(false);
+    // 		// SpeedTambolaScoreManager.ScoreInstance.Label.text = string.Empty;
+    // 		MessageTime = -1;
+    // 	}
+    // }
 
     public void OnButtonPress(int buttonValue)
     {
@@ -698,6 +697,7 @@ public class SpeedTambolaGameManager : MonoBehaviour
         Debug.Log("Bingo Coroutine Begins");
         if (FinishedCombinationsInOrder.Count > 0)
         {
+            
             Debug.Log("List count greater than 0");
             Debug.Log("Traversing through list");
             List<SpeedTambolaButtonRenderer> comboList = FinishedCombinationsInOrder[0] == store.firstRow_list ? First_Row : FinishedCombinationsInOrder[0] == store.secondRow_list ? Second_Row : FinishedCombinationsInOrder[0] == store.thirdRow_list ? Third_Row : FinishedCombinationsInOrder[0] == store.fourthRow_list ? Fourth_Row : FinishedCombinationsInOrder[0] == store.fifthRow_list ? Fifth_Row : FinishedCombinationsInOrder[0] == store.b_list ? B_Grid : FinishedCombinationsInOrder[0] == store.i_list ? I_Grid : FinishedCombinationsInOrder[0] == store.n_list ? N_Grid : FinishedCombinationsInOrder[0] == store.g_list ? G_Grid : FinishedCombinationsInOrder[0] == store.o_list ? O_Grid : FinishedCombinationsInOrder[0] == store.Diagonal1_list ? Diagonal1 : FinishedCombinationsInOrder[0] == store.Diagonal2_list ? Diagonal2 : Four_Corners;
@@ -715,16 +715,18 @@ public class SpeedTambolaGameManager : MonoBehaviour
             {
                 points += 1000;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Bingo!", 1000, '+'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Bingo!", 1000, '+', SpeedTambolaGameManager.Instance.BingoSuccess));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(points);
+                //BingoSuccess.Play();
             }
 
             else
             {
                 points += 500;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Bingo!", 500, '+'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Bingo!", 500, '+', SpeedTambolaGameManager.Instance.BingoSuccess));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(points);
+                //BingoSuccess.Play();
             }
             if (!firstalreadyMarked) firstalreadyMarked = comboList == First_Row;
             if (!secondalreadyMarked) secondalreadyMarked = comboList == Second_Row;
@@ -756,15 +758,18 @@ public class SpeedTambolaGameManager : MonoBehaviour
             if (SpeedTambolaScoreManager.ScoreInstance.TotalScore >= 500)
             {
                 points -= 500;
-                StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("False Claim!", 500, '-'));
+                StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("False Claim!", 500, '-', SpeedTambolaGameManager.Instance.BingoFail));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(points);
+                //BingoFail.Play();
             }
             else if (SpeedTambolaScoreManager.ScoreInstance.TotalScore <= 500)
             {
                 points -= points;
-                StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("False Claim!", 500, '-'));
+                StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("False Claim!", 500, '-', SpeedTambolaGameManager.Instance.BingoFail));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(points);
+                //BingoFail.Play();
             }
+            
         }
         //insert condition for claiming all possible combinations
         BingoRoutine = null;

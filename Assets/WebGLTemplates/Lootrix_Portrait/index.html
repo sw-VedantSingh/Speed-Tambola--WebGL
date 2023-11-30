@@ -116,5 +116,73 @@
       document.body.appendChild(script);
       </script>
       <script src="../ingame.js"></script>
+      <script>
+        function GetLoginDetails(data) {
+            // GetBotData();
+            //      SetParentUrl();
+
+            if (getParentUrl() == null) {
+                window.applicationInstance.SendMessage("APIController", "SetUserData", "");
+                 return;
+            }
+            var res = {
+                event: 'Init',
+                data: ''
+            };
+            var jsonStr = JSON.stringify(res);
+            window.parent.postMessage(jsonStr, '*');
+            return;
+            var url = window.location.href;
+            var url_string = window.location;
+            var url1 = new URL(url_string);
+            var name = url1.searchParams.get("data");
+            console.log(name);
+            console.log("------------");
+            if (name == null) {
+                name = '{"userId":"95d8190d-8fd5-4d11-ae5e-6c848d017dea","isFreeGame":true,"gameName":"Default"}';
+            }
+            console.log(name);
+            console.log("------------");
+            // var userData = {
+            //   Id: user,
+            //   token: token,
+            //   name: uname,
+            //   balance: amount,
+            //   currency_type: currencyType,
+            //   game_Id: 'defaultgame',
+            //   isBlockApiConnection: isPlayFun,
+            //   bootAmount: '',
+            // };
+            // window.applicationInstance.SendMessage("APIController", "GetLoginDataResponseFromWebGL", "" + userData);
+        }
+        function getParentUrl() {
+            var isInIframe = (parent !== window),
+                parentUrl = null;
+            if (isInIframe) {
+                parentUrl = document.referrer;
+            }
+            return parentUrl;
+        }
+        // function GetRandomPrediction(type,rowCount,columnCount,predictionCount)
+        // {
+        //   if (getParentUrl() == null) {
+        //           return;
+        //       }
+        //       var jsondata = {
+        //           event: type,
+        //           data: {
+        //             rowCount: rowCount,
+        //             columnCount: columnCount,
+        //             predictionCount: predictionCount                     
+        //           }
+        //       };
+        //       var jsonString = JSON.stringify(jsondata);
+        //       console.log(jsondata);
+        //       window.parent.postMessage(jsonString, '*'); 
+        // }
+      </script>
+      <script>
+
+      </script>
   </body>
 </html>

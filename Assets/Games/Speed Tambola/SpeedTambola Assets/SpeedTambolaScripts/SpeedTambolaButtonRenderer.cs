@@ -12,6 +12,7 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
     public int AssignedNumber;
     public void isPressed()
     {
+        SpeedTambolaGameManager.Instance.ButtonClick.Play();
         if (isValid())
         {
             cell.GetComponentInChildren<TextMeshProUGUI>().color = new Color32(255, 255, 255, 255);
@@ -72,14 +73,14 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
             {
                 SpeedTambolaGameManager.Instance.points += 200;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Perfect Score!", 200, '+'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Perfect Score!", 200, '+', SpeedTambolaGameManager.Instance.ButtonClick));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(SpeedTambolaGameManager.Instance.points);
             }
             else
             {
                 SpeedTambolaGameManager.Instance.points += 100;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Perfect Score!", 100, '+'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Perfect Score!", 100, '+', SpeedTambolaGameManager.Instance.ButtonClick));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(SpeedTambolaGameManager.Instance.points);
             }
             //StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Perfect Score!", 100, '+'));
@@ -91,7 +92,7 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
                 StartCoroutine("Blink");
                 SpeedTambolaGameManager.Instance.points -= 100;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Wrong Select!", 100, '-'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Wrong Select!", 100, '-', SpeedTambolaGameManager.Instance.ButtonClick));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(SpeedTambolaGameManager.Instance.points);
             }
 
@@ -100,7 +101,7 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
                 int buffer = SpeedTambolaGameManager.Instance.points;
                 SpeedTambolaGameManager.Instance.points -= SpeedTambolaGameManager.Instance.points;
                 if (test1 != null) StopCoroutine(test1);
-                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Penalty!", 100, '-'));
+                test1 = StartCoroutine(SpeedTambolaScoreManager.ScoreInstance.ScoreUpdates("Penalty!", 100, '-', SpeedTambolaGameManager.Instance.ButtonClick));
                 SpeedTambolaScoreManager.ScoreInstance.SetScore(SpeedTambolaGameManager.Instance.points);
                 StartCoroutine("Blink");
             }
@@ -131,22 +132,19 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
 
     public bool isValid()
     {
-        if (value.text == SpeedTambolaGameManager.Instance.Called[SpeedTambolaGameManager.Instance.Called.Count - 1]) return true;
-        if (SpeedTambolaScoreManager.ScoreInstance.isAnyButton || !SpeedTambolaGameController.Controller.CentralTimer)
+        if (value.text == SpeedTambolaGameManager.Instance.Called[SpeedTambolaGameManager.Instance.Called.Count - 1] && !SpeedTambolaScoreManager.ScoreInstance.isAnyButton) return true;
+        else if (SpeedTambolaScoreManager.ScoreInstance.isAnyButton && value.text != SpeedTambolaGameManager.Instance.Called[SpeedTambolaGameManager.Instance.Called.Count - 1] || (SpeedTambolaScoreManager.ScoreInstance.isAnyButton && value.text == SpeedTambolaGameManager.Instance.Called[SpeedTambolaGameManager.Instance.Called.Count - 1]))
         {
+            //Debug.Log("Condition 2 Validated");
             SpeedTambolaScoreManager.ScoreInstance.isAnyButton = false;
             SpeedTambolaScoreManager.ScoreInstance.isAbilityActive = false;
             SpeedTambolaGameController.Controller.Gameplay = true;
             SpeedTambolaScoreManager.ScoreInstance.AbilityAndScoreUpdates.SetActive(false);
-            foreach (Transform i in SpeedTambolaScoreManager.ScoreInstance.AbilityAndScoreUpdates.transform)
-            {
-                i.gameObject.SetActive(true);
-            }
+            foreach (Transform i in SpeedTambolaScoreManager.ScoreInstance.AbilityAndScoreUpdates.transform) i.gameObject.SetActive(true);
             SpeedTambolaScoreManager.ScoreInstance.AbilityAndScoreUpdates.transform.GetChild(0).gameObject.SetActive(false);
             SpeedTambolaScoreManager.ScoreInstance.DisableAbilities();
             SpeedTambolaScoreManager.ScoreInstance.InactiveAbilities[SpeedTambolaScoreManager.ScoreInstance.objectIndex].SetActive(false);
             SpeedTambolaScoreManager.ScoreInstance.ButtonGridBottom.SetActive(true);
-
             //if (SpeedTambolaScoreManager.ScoreInstance.UnusedAbilities.Count > 0)
             //{
             //    SpeedTambolaScoreManager.ScoreInstance.InactiveAbilities[SpeedTambolaScoreManager.ScoreInstance.UnusedAbilities.Count - 1].SetActive(true);
@@ -156,18 +154,18 @@ public class SpeedTambolaButtonRenderer : MonoBehaviour
             return true;
         }
 
-        if (SpeedTambolaScoreManager.ScoreInstance.isRanFour || !SpeedTambolaGameController.Controller.CentralTimer)
-        {
-            SpeedTambolaScoreManager.ScoreInstance.isRanFour = false;
-            SpeedTambolaScoreManager.ScoreInstance.isAbilityActive = false;
-            SpeedTambolaGameController.Controller.Gameplay = true;
-            SpeedTambolaGameManager.Instance.TimerValue = 0;
-            //SpeedTambolaScoreManager.ScoreInstance.RanFourPanel.SetActive(false);
-            // if (SpeedTambolaGameManager.Instance.shuffleCall.Contains(Convert.ToInt32(cell.GetComponentInChildren<TextMeshProUGUI>().text)))
-            // 	SpeedTambolaGameManager.Instance.shuffleCall.Remove(Convert.ToInt32(cell.GetComponentInChildren<TextMeshProUGUI>().text));
-            return true;
-        }
-        return false;
+        //if (SpeedTambolaScoreManager.ScoreInstance.isRanFour || !SpeedTambolaGameController.Controller.CentralTimer)
+        //{
+        //    SpeedTambolaScoreManager.ScoreInstance.isRanFour = false;
+        //    SpeedTambolaScoreManager.ScoreInstance.isAbilityActive = false;
+        //    SpeedTambolaGameController.Controller.Gameplay = true;
+        //    SpeedTambolaGameManager.Instance.TimerValue = 0;
+        //    //SpeedTambolaScoreManager.ScoreInstance.RanFourPanel.SetActive(false);
+        //    // if (SpeedTambolaGameManager.Instance.shuffleCall.Contains(Convert.ToInt32(cell.GetComponentInChildren<TextMeshProUGUI>().text)))
+        //    // 	SpeedTambolaGameManager.Instance.shuffleCall.Remove(Convert.ToInt32(cell.GetComponentInChildren<TextMeshProUGUI>().text));
+        //    return true;
+        //}
+        else return false;
     }
 
     private void MarkButton()

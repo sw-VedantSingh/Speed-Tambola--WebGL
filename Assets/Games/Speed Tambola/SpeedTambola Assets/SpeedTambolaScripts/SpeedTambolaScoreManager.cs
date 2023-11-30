@@ -10,11 +10,11 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 	[SerializeField] TMP_Text ScoreDisplay ;
 	public GameObject ButtonGridBottom;
 	public int TotalScore = 0;
-	public List<Button> FourRandomButtons;
+	//public List<Button> FourRandomButtons;
 	public bool isMeterFull = false;
 	public bool isAbilityActive = false;
 	public bool is2x = false;
-	public bool isRanFour = false;
+	//public bool isRanFour = false;
 	public List<Sprite> PrimarySprites;
 	public List<Sprite> SecondarySprites;
 	//public GameObject RanFourPanel;
@@ -23,22 +23,25 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 	public static SpeedTambolaScoreManager ScoreInstance;
 	public float abilityDuration = 10f;
 	public float buffer = 10f;
-	int whole;
+	//int whole;
 	public GameObject FullIndicator;
 	public GameObject AbilityAndScoreUpdates;
 	public List<GameObject> InactiveAbilities;
 	public List<GameObject> UnusedAbilities = new();
 	public GameObject Notification;
 	[SerializeField] GameObject Score;
-	public bool UnusedAbilityActive = false;
+	//public bool UnusedAbilityActive = false;
+	public bool flag = false;
 	void Awake()
 	{
 		ScoreInstance = this;
 	}
 
-	public IEnumerator ScoreUpdates(string message, int points, char update)
+	public IEnumerator ScoreUpdates(string message, int points, char update, AudioSource audioSource)
 	{
 		//Debug.LogError("Animation Coroutine");
+		audioSource.Play();
+		Debug.Log($"Audio Source is Playing: {audioSource.isPlaying}");
 		float messageDuration = 1.5f;
 		Notification.SetActive(true);
 		Notification.GetComponentInChildren<TextMeshProUGUI>().text = $"{message}";
@@ -81,13 +84,14 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 			if (!isAbilityActive)
 			{
                 foreach (GameObject i in InactiveAbilities) i.SetActive(false);
-                //if (UnusedAbilities.Count > 0) UnusedAbilities[UnusedAbilities.Count - 1].SetActive(true);
+                
+				//if (UnusedAbilities.Count > 0) UnusedAbilities[UnusedAbilities.Count - 1].SetActive(true);
                 InactiveAbilities[objectIndex].SetActive(true);
                 objectIndex++;
                 if (objectIndex >= InactiveAbilities.Count) objectIndex = 0;
             }
+			if(isAbilityActive && is2x) flag = true;
 			//if(InactiveAbilities[objectIndex] == UnusedAbilities[UnusedAbilities.Count - 1]) UnusedAbilities.Remove(UnusedAbilities[UnusedAbilities.Count - 1]);
-			
 		}
 	}
 
@@ -104,8 +108,8 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 		foreach (GameObject obj in InactiveAbilities) obj.SetActive(false);
 		is2x = false;
 		isAnyButton = false;
-		isRanFour = false;
-		UnusedAbilityActive = false;
+		//isRanFour = false;
+		//UnusedAbilityActive = false;
 	}
 
 	void OnEnable()
@@ -124,16 +128,19 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 
 	public void AnyOnTheGrid()
 	{
-		Debug.Log("Anyongrid...in");
-		if (isMeterFull || UnusedAbilityActive)
+		//Debug.Log("Anyongrid...in");
+
+         //|| UnusedAbilityActive
+
+        if (isMeterFull)
 		{
-            Debug.Log("Anyongrid...out");
+            //Debug.Log("Anyongrid...out");
 
             DisableAbilities();
 			FullIndicator.SetActive(false);
             AbilityAndScoreUpdates.transform.GetChild(1).GetComponent<Image>().fillAmount = 1.0f;
             //InactiveAbilities[0].SetActive(true);
-            UnusedAbilityActive = false;
+            //UnusedAbilityActive = false;
 			isAbilityActive = true;
 			isMeterFull = false;
 			isAnyButton = true;
@@ -151,77 +158,79 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 		}
 	}
 
-	public void RandomFourAbility()
-	{
-		if (isMeterFull || UnusedAbilityActive)
-		{
-			DisableAbilities();
-			UnusedAbilityActive = false;
-			FullIndicator.SetActive(false);
-			isAbilityActive = true;
-			isMeterFull = false;
-			isRanFour = true;
-			//RanFourPanel.SetActive(true);
-			SpeedTambolaGameController.Controller.Gameplay = false;
-			//SpeedTambolaGameManager.Instance.IDKMeter.fillAmount = 0;
-			//int unmarked = 0;
-			// unmarked += SpeedTambolaGameManager.Instance.store.b_list.FindAll(x => !x.isMarked).Count;
-			// unmarked += SpeedTambolaGameManager.Instance.store.i_list.FindAll(x => !x.isMarked).Count;
-			// unmarked += SpeedTambolaGameManager.Instance.store.n_list.FindAll(x => !x.isMarked).Count;
-			// unmarked += SpeedTambolaGameManager.Instance.store.g_list.FindAll(x => !x.isMarked).Count;
-			// unmarked += SpeedTambolaGameManager.Instance.store.o_list.FindAll(x => !x.isMarked).Count;
-			// Debug.Log(unmarked);
-			SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.b_list);
-			SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.i_list);
-			SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.n_list);
-			SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.g_list);
-			SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.o_list);
-			Debug.Log(SpeedTambolaGameManager.Instance.Unmarked.Count);
-			for (int j = 0; j < 4; j++)
-			{
-				int i = Random.Range(0, SpeedTambolaGameManager.Instance.Unmarked.Count);
-				if (!SpeedTambolaGameManager.Instance.RandomFourNumbers.Contains(SpeedTambolaGameManager.Instance.Unmarked[i])) SpeedTambolaGameManager.Instance.RandomFourNumbers.Add(SpeedTambolaGameManager.Instance.Unmarked[i]);
-			}
-			for (int i = 0; i < SpeedTambolaGameManager.Instance.RandomFourNumbers.Count; i++)
-			{
-				if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number >= 1 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 15)
-				{
-					FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"B {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
-					FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[0];
-				}
-				else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 15 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 30)
-				{
-					FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"I {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
-					FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[1];
-				}
-				else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 30 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 45)
-				{
-					FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"N {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
-					FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[2];
-				}
-				else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 45 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 60)
-				{
-					FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"G {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
-					FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[3];
-				}
-				else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 60 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 75)
-				{
-					FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"O {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
-					FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[4];
-				}
-			}
-		}
-	}
+	//public void RandomFourAbility()
+	//{
+ //       // || UnusedAbilityActive
+ //       if (isMeterFull)
+	//	{
+	//		DisableAbilities();
+	//		//UnusedAbilityActive = false;
+	//		FullIndicator.SetActive(false);
+	//		isAbilityActive = true;
+	//		isMeterFull = false;
+	//		//isRanFour = true;
+	//		//RanFourPanel.SetActive(true);
+	//		SpeedTambolaGameController.Controller.Gameplay = false;
+	//		//SpeedTambolaGameManager.Instance.IDKMeter.fillAmount = 0;
+	//		//int unmarked = 0;
+	//		// unmarked += SpeedTambolaGameManager.Instance.store.b_list.FindAll(x => !x.isMarked).Count;
+	//		// unmarked += SpeedTambolaGameManager.Instance.store.i_list.FindAll(x => !x.isMarked).Count;
+	//		// unmarked += SpeedTambolaGameManager.Instance.store.n_list.FindAll(x => !x.isMarked).Count;
+	//		// unmarked += SpeedTambolaGameManager.Instance.store.g_list.FindAll(x => !x.isMarked).Count;
+	//		// unmarked += SpeedTambolaGameManager.Instance.store.o_list.FindAll(x => !x.isMarked).Count;
+	//		// Debug.Log(unmarked);
+	//		SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.b_list);
+	//		SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.i_list);
+	//		SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.n_list);
+	//		SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.g_list);
+	//		SpeedTambolaGameManager.Instance.GetUnmarked(SpeedTambolaGameManager.Instance.store.o_list);
+	//		Debug.Log(SpeedTambolaGameManager.Instance.Unmarked.Count);
+	//		for (int j = 0; j < 4; j++)
+	//		{
+	//			int i = Random.Range(0, SpeedTambolaGameManager.Instance.Unmarked.Count);
+	//			if (!SpeedTambolaGameManager.Instance.RandomFourNumbers.Contains(SpeedTambolaGameManager.Instance.Unmarked[i])) SpeedTambolaGameManager.Instance.RandomFourNumbers.Add(SpeedTambolaGameManager.Instance.Unmarked[i]);
+	//		}
+	//		for (int i = 0; i < SpeedTambolaGameManager.Instance.RandomFourNumbers.Count; i++)
+	//		{
+	//			if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number >= 1 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 15)
+	//			{
+	//				FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"B {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
+	//				FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[0];
+	//			}
+	//			else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 15 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 30)
+	//			{
+	//				FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"I {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
+	//				FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[1];
+	//			}
+	//			else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 30 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 45)
+	//			{
+	//				FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"N {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
+	//				FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[2];
+	//			}
+	//			else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 45 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 60)
+	//			{
+	//				FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"G {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
+	//				FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[3];
+	//			}
+	//			else if (SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number > 60 && SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number <= 75)
+	//			{
+	//				FourRandomButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = $"O {SpeedTambolaGameManager.Instance.RandomFourNumbers[i].number}";
+	//				FourRandomButtons[i].GetComponentInChildren<Image>().sprite = PrimarySprites[4];
+	//			}
+	//		}
+	//	}
+	//}
 
 	public void x2Combo()
 	{
-		if (isMeterFull || UnusedAbilityActive)
+        // || UnusedAbilityActive
+        if (isMeterFull)
 		{
 			DisableAbilities();
 			AbilityAndScoreUpdates.transform.GetChild(0).gameObject.SetActive(false);
 			InactiveAbilities[1].SetActive(true);
 			FullIndicator.SetActive(false);
-			UnusedAbilityActive = false;
+			//UnusedAbilityActive = false;
 			isAbilityActive = true;
 			is2x = true;
 			isMeterFull = false;
@@ -265,30 +274,35 @@ public class SpeedTambolaScoreManager : MonoBehaviour
 				//	UnusedAbilityActive = true;
 				//}
 				is2x = false;
+				if(flag)
+				{
+					flag = false;
+                    InactiveAbilities[0].SetActive(true);
+                }
 			}
 		}
-		if (isAbilityActive && isRanFour && SpeedTambolaGameController.Controller.CentralTimer)
-		{
-			abilityDuration -= Time.deltaTime;
-			whole = (int)abilityDuration;
-			//RanFourPanel.SetActive(true);
-			//AbilityDuration.GetComponent<TMP_Text>().text = $"0{whole.ToString()}";
-			if (abilityDuration <= 0f)
-			{
-				abilityDuration = buffer;
-				isAbilityActive = false;
-				DisableAbilities();
-				//RanFourPanel.SetActive(false);
-				AbilityAndScoreUpdates.SetActive(false);
-				InactiveAbilities[objectIndex].SetActive(false);
-				//if (UnusedAbilities.Count > 0)
-				//{
-				//	InactiveAbilities[UnusedAbilities.Count - 1].SetActive(true);
-				//	UnusedAbilities.Remove(UnusedAbilities[UnusedAbilities.Count - 1]);
-				//	UnusedAbilityActive = true;
-				//}
-				isRanFour = false;
-			}
-		}
+		//if (isAbilityActive && isRanFour && SpeedTambolaGameController.Controller.CentralTimer)
+		//{
+		//	abilityDuration -= Time.deltaTime;
+		//	whole = (int)abilityDuration;
+		//	//RanFourPanel.SetActive(true);
+		//	//AbilityDuration.GetComponent<TMP_Text>().text = $"0{whole.ToString()}";
+		//	if (abilityDuration <= 0f)
+		//	{
+		//		abilityDuration = buffer;
+		//		isAbilityActive = false;
+		//		DisableAbilities();
+		//		//RanFourPanel.SetActive(false);
+		//		AbilityAndScoreUpdates.SetActive(false);
+		//		InactiveAbilities[objectIndex].SetActive(false);
+		//		//if (UnusedAbilities.Count > 0)
+		//		//{
+		//		//	InactiveAbilities[UnusedAbilities.Count - 1].SetActive(true);
+		//		//	UnusedAbilities.Remove(UnusedAbilities[UnusedAbilities.Count - 1]);
+		//		//	UnusedAbilityActive = true;
+		//		//}
+		//		isRanFour = false;
+		//	}
+		//}
 	}
 }

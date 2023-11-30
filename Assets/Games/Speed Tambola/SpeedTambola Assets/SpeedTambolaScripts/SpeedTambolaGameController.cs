@@ -26,6 +26,7 @@ public class SpeedTambolaGameController : MonoBehaviour
     public TMP_Text FirstName;
     public TMP_Text LastName;
     public List<Image> MatchResult;
+    [SerializeField] int BotScore = 0;
 
     [Header("NEW UPDATE")]
 
@@ -40,11 +41,7 @@ public class SpeedTambolaGameController : MonoBehaviour
 
     public GameObject LobbyPanel;
     public GameObject Gameplaypanel;
-
     public InsufficientPanelHandler insufficientPanelHandler;
-
-
-
 
     //public MatchControllerNakama matchController;
     void Awake()
@@ -66,7 +63,6 @@ public class SpeedTambolaGameController : MonoBehaviour
     {
 
         SpeedTambolaGameManager.Instance.ResultPanel.SetActive(false);
-        MatchMakingTambola.Instance.CountdownTxt.gameObject.SetActive(true);
 
         MatchMakingTambola.Instance.Showmatching();
         SpeedTambolaGameManager.Instance.RestartGame();
@@ -91,37 +87,42 @@ public class SpeedTambolaGameController : MonoBehaviour
     //}
     public void CallSettingAction()
     {
-        if (SettingsPanel.PanelTransform.anchoredPosition.x > 600)
-        {
-            SettingsPanel.ShowSettings();
-
+        if (SettingsPanel.PanelTransform.anchoredPosition.x > 600) SettingsPanel.ShowSettings();
             //MiniRouletteUIController.instance.settingsPanel.SwapSpriteSequence = null;
             //MiniRouletteUIController.instance.settingsPanel.SwapSpriteSequence += () => DOTween.Sequence().Append(setting.transform.DOScale(Vector2.zero, 0.125f).OnComplete(() => setting.image.sprite = SettingSprite)).Append(setting.transform.DOScale(Vector2.one, 0.125f).SetEase(Ease.OutBounce));
             //DOTween.Sequence().Append(setting.transform.DOScale(Vector2.zero, 0.125f).OnComplete(() => setting.image.sprite = CloseSprite)).Append(setting.transform.DOScale(Vector2.one, 0.125f).SetEase(Ease.OutBounce));
-        }
-        else
-        {
-            SettingsPanel.HideSettings();
+        else SettingsPanel.HideSettings();
             //DOTween.Sequence().Append(setting.transform.DOScale(Vector2.zero, 0.125f).OnComplete(() => setting.image.sprite = SettingSprite)).Append(setting.transform.DOScale(Vector2.one, 0.125f).SetEase(Ease.OutBounce));
-        }
     }
 
+    int GenerateBotScore()
+    {
+        BotScore = 0;
+        int random = UnityEngine.Random.Range(0, 2);
+        int value = 100 * UnityEngine.Random.Range(5, 26);
+        if (random == 0) BotScore -= value;
+        else BotScore += value;
+        if (BotScore < 0) BotScore *= -1;
+        else if(BotScore > 7000) BotScore = 7000;
+        Debug.Log($"Random Value: {BotScore}");
+        return BotScore;
+    }
     public void Results()
     {
         SpeedTambolaGameManager.Instance.val = DateTime.Now;
         SpeedTambolaGameManager.Instance.endTime = SpeedTambolaGameManager.Instance.val.AddSeconds(500000000);
 
 
-        int _winProbality = UnityEngine.Random.Range(1, 11);
+        //int _winProbality = UnityEngine.Random.Range(1, 11);
 
-        int[] randomValue = { 100, 200, 300, 500, 1000, 2000, 3000, 5000, 6000, 8000 };
+        //int[] randomValue = { 100, 200, 300, 500, 1000, 2000, 3000, 5000, 6000, 8000 };
 
-        //int rand = UnityEngine.Random.Range(0, randomValue.Length);
+        //int rand = UnityEngine.Random.Range(0, randomValue.Length);/*Peepee Poopoo, aka useless*/
 
-        //BotScore = rand;
-
-        int BotScore = 0;
-        BotScore = randomValue[UnityEngine.Random.Range(0, randomValue.Length)];
+        //BotScore = rand;/*Peepee Poopoo, aka useless*/
+        BotScore = GenerateBotScore();
+       
+        //BotScore = randomValue[UnityEngine.Random.Range(0, randomValue.Length)];
         //if (_winProbality <= 4)
         //{
         //    BotScore = UnityEngine.Random.Range(SpeedTambolaScoreManager.ScoreInstance.TotalScore, SpeedTambolaScoreManager.ScoreInstance.TotalScore + 100);
@@ -202,6 +203,7 @@ public class SpeedTambolaGameController : MonoBehaviour
     {
         APIController.FullScreen();
     }
+
 
     public void ExitWebGL()
     {
